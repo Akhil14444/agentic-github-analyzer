@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic GitHub Analyzer — Full Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #060912;
+  --bg2:       #0c1120;
+  --bg3:       #111b2e;
+  --card:      #141e33;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --blue:      #4f8fff;
+  --cyan:      #22d3ee;
+  --green:     #34d399;
+  --amber:     #fbbf24;
+  --purple:    #a78bfa;
+  --coral:     #f87171;
+  --text:      #e2e8f0;
+  --text2:     #94a3b8;
+  --text3:     #64748b;
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Outfit', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── Nav ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(6,9,18,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex; align-items: center; gap: 2rem;
+  height: 54px;
+}
+.nav-brand { font-weight: 700; font-size: 0.95rem; color: var(--cyan); white-space: nowrap; }
+.nav-links { display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none; flex: 1; }
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-link {
+  color: var(--text2); text-decoration: none;
+  font-size: 0.8rem; padding: 0.3rem 0.6rem;
+  border-radius: 6px; white-space: nowrap;
+  transition: all 0.15s;
+}
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+/* ── Layout ── */
+.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+
+/* ── Hero ── */
+.hero {
+  text-align: center;
+  padding: 4rem 0 3rem;
+  position: relative;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: rgba(79,143,255,0.1);
+  border: 1px solid rgba(79,143,255,0.2);
+  border-radius: 20px;
+  padding: 0.3rem 1rem;
+  font-size: 0.78rem;
+  color: var(--blue);
+  margin-bottom: 1.5rem;
+  font-family: var(--mono);
+}
+.hero h1 {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+.hero h1 span { color: var(--cyan); }
+.hero p { color: var(--text2); font-size: 1rem; max-width: 580px; margin: 0 auto 2rem; }
+.badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.badge {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 0.25rem 0.7rem;
+  font-size: 0.75rem; color: var(--text2);
+  font-family: var(--mono);
+}
+
+/* ── Section ── */
+.section { margin-bottom: 4rem; }
+.section-title {
+  font-size: 1.3rem; font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.section-title .icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-weight: 600; font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.card p { color: var(--text2); font-size: 0.88rem; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+
+/* ── Agent cards ── */
+.agent-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+.agent-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+.agent-card.blue::before  { background: var(--blue); }
+.agent-card.amber::before { background: var(--amber); }
+.agent-card.green::before { background: var(--green); }
+.agent-card.coral::before { background: var(--coral); }
+.agent-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
+.agent-role { font-size: 0.75rem; color: var(--text3); margin-bottom: 0.75rem; font-family: var(--mono); }
+.agent-desc { font-size: 0.82rem; color: var(--text2); margin-bottom: 0.75rem; }
+.agent-tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem; color: var(--text3);
+  font-family: var(--mono);
+  margin: 0.15rem 0.15rem 0 0;
+}
+
+/* ── Code block ── */
+pre {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text2);
+}
+.kw  { color: var(--purple); }
+.str { color: var(--green); }
+.cm  { color: var(--text3); font-style: italic; }
+.fn  { color: var(--blue); }
+.cls { color: var(--cyan); }
+.num { color: var(--amber); }
+
+/* ── Step flow ── */
+.flow-steps { display: flex; flex-direction: column; gap: 0; }
+.flow-step {
+  display: flex; gap: 1rem; align-items: flex-start;
+  position: relative; padding-bottom: 1.5rem;
+}
+.flow-step:last-child { padding-bottom: 0; }
+.flow-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 15px; top: 32px; bottom: 0;
+  width: 1px;
+  background: var(--border2);
+}
+.step-num {
+  width: 32px; height: 32px; min-width: 32px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+  color: var(--cyan);
+  font-family: var(--mono);
+  z-index: 1;
+}
+.step-content h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; }
+.step-content p  { font-size: 0.83rem; color: var(--text2); }
+.step-content code {
+  font-family: var(--mono); font-size: 0.78rem;
+  background: rgba(255,255,255,0.05);
+  padding: 0.1em 0.4em; border-radius: 4px;
+  color: var(--cyan);
+}
+
+/* ── Tabs ── */
+.tab-nav {
+  display: flex; gap: 0.25rem; margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+.tab-btn {
+  background: none; border: none;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--text3); cursor: pointer;
+  border-radius: 6px; font-family: var(--sans);
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: var(--text2); }
+.tab-btn.active { background: rgba(79,143,255,0.1); color: var(--blue); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── QA accordion ── */
+.qa-item { border-bottom: 1px solid var(--border); }
+.qa-q {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 0; cursor: pointer;
+  font-size: 0.9rem; font-weight: 500;
+  user-select: none;
+  transition: color 0.15s;
+}
+.qa-q:hover { color: var(--blue); }
+.qa-q .arrow { transition: transform 0.2s; color: var(--text3); font-size: 1rem; }
+.qa-item.open .qa-q .arrow { transform: rotate(180deg); }
+.qa-a {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.qa-item.open .qa-a { max-height: 600px; }
+.qa-a-inner {
+  padding-bottom: 1rem;
+  font-size: 0.85rem; color: var(--text2);
+  line-height: 1.7;
+}
+
+/* ── File tree ── */
+.file-tree {
+  font-family: var(--mono); font-size: 0.8rem;
+  line-height: 1.9; color: var(--text2);
+}
+.tree-dir  { color: var(--blue); }
+.tree-file { color: var(--text2); }
+.tree-desc { color: var(--text3); }
+
+/* ── Table ── */
+table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.85rem; }
+th {
+  text-align: left; padding: 0.6rem 1rem;
+  background: var(--bg3); color: var(--text2);
+  font-weight: 600; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border2);
+}
+td {
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: top;
+}
+td:first-child { font-family: var(--mono); font-size: 0.78rem; color: var(--cyan); }
+tr:hover td { background: rgba(255,255,255,0.015); }
+
+/* ── Pitch box ── */
+.pitch-box {
+  background: linear-gradient(135deg, rgba(79,143,255,0.08), rgba(34,211,238,0.05));
+  border: 1px solid rgba(79,143,255,0.2);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1rem;
+}
+.pitch-label {
+  font-size: 0.7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--blue); margin-bottom: 0.75rem;
+  font-family: var(--mono);
+}
+.pitch-text { font-size: 0.9rem; color: var(--text); line-height: 1.75; font-style: italic; }
+
+/* ── Resume bullets ── */
+.resume-item {
+  display: flex; gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem; color: var(--text2); line-height: 1.6;
+}
+.resume-bullet { color: var(--cyan); font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+@media (max-width: 640px) {
+  .grid-2, .grid-4 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">⚡ GitHub Analyzer</div>
+  <div class="nav-links">
+    <a href="#overview"   class="nav-link">Overview</a>
+    <a href="#structure"  class="nav-link">Structure</a>
+    <a href="#agents"     class="nav-link">Agents</a>
+    <a href="#workflow"   class="nav-link">Workflow</a>
+    <a href="#code"       class="nav-link">Code</a>
+    <a href="#interview"  class="nav-link">Interview</a>
+    <a href="#qa"         class="nav-link">Q&amp;A</a>
+    <a href="#resume"     class="nav-link">Resume</a>
+    <a href="#deploy"     class="nav-link">Deploy</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-tag">🤖 Agentic AI · Multi-Agent System</div>
+  <h1>GitHub Repository<br><span>Analyzer</span></h1>
+  <p>CrewAI + GitHub MCP Server + LangChain + Django — a production-grade multi-agent system that analyzes any GitHub repo and renders a structured HTML report.</p>
+  <div class="badges">
+    <span class="badge">Python 3.11</span>
+    <span class="badge">Django 4.2</span>
+    <span class="badge">CrewAI 0.28</span>
+    <span class="badge">LangChain 0.1</span>
+    <span class="badge">OpenAI GPT-4o</span>
+    <span class="badge">MCP Protocol</span>
+    <span class="badge">4 Agents</span>
+  </div>
+</div>
+
+<!-- ══ PROJECT STRUCTURE ══════════════════════════════════════════════════ -->
+<div class="section" id="structure">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(79,143,255,0.1);color:var(--blue)">📁</span>
+    Project Structure
+  </div>
+  <div class="card">
+    <div class="file-tree">
+<span class="tree-dir">github_analyzer/</span><br>
+├── <span class="tree-file">manage.py</span>                       <span class="tree-desc"># Django CLI entry point</span><br>
+├── <span class="tree-file">requirements.txt</span>                <span class="tree-desc"># All dependencies</span><br>
+├── <span class="tree-file">.env.example</span>                    <span class="tree-desc"># Environment template</span><br>
+├── <span class="tree-file">demo_report.py</span>                  <span class="tree-desc"># Zero-dependency demo mode</span><br>
+├── <span class="tree-file">Dockerfile</span>                      <span class="tree-desc"># Production container</span><br>
+│<br>
+├── <span class="tree-dir">github_analyzer/</span>                 <span class="tree-desc"># Django project config</span><br>
+│   ├── <span class="tree-file">settings.py</span>                 <span class="tree-desc"># DB, static files, env vars</span><br>
+│   ├── <span class="tree-file">urls.py</span>                     <span class="tree-desc"># Root URL routing</span><br>
+│   └── <span class="tree-file">wsgi.py</span>                     <span class="tree-desc"># WSGI deployment entry</span><br>
+│<br>
+├── <span class="tree-dir">analyzer/</span>                        <span class="tree-desc"># Django app</span><br>
+│   ├── <span class="tree-file">views.py</span>                    <span class="tree-desc"># 5 views: index, analyze, run, report, download</span><br>
+│   └── <span class="tree-file">urls.py</span>                     <span class="tree-desc"># App-level URL patterns</span><br>
+│<br>
+├── <span class="tree-dir">django_app/templates/analyzer/</span><br>
+│   ├── <span class="tree-file">base.html</span>                   <span class="tree-desc"># Dark theme, fonts, CSS variables</span><br>
+│   ├── <span class="tree-file">index.html</span>                  <span class="tree-desc"># Repository input form</span><br>
+│   ├── <span class="tree-file">loading.html</span>                <span class="tree-desc"># Live agent progress screen</span><br>
+│   ├── <span class="tree-file">report.html</span>                 <span class="tree-desc"># Tabbed HTML report renderer</span><br>
+│   └── <span class="tree-file">error.html</span>                  <span class="tree-desc"># Error display page</span><br>
+│<br>
+├── <span class="tree-dir">mcp/</span><br>
+│   └── <span class="tree-file">github_mcp_client.py</span>        <span class="tree-desc"># MCP protocol + GitHub REST fallback</span><br>
+│<br>
+├── <span class="tree-dir">crew/</span><br>
+│   ├── <span class="tree-file">crew_assembler.py</span>           <span class="tree-desc"># Main orchestration class</span><br>
+│   ├── <span class="tree-dir">agents/</span><span class="tree-file">github_agents.py</span>    <span class="tree-desc"># 4 specialized CrewAI agents</span><br>
+│   ├── <span class="tree-dir">tasks/</span><span class="tree-file">github_tasks.py</span>     <span class="tree-desc"># 4 analysis tasks with prompts</span><br>
+│   └── <span class="tree-dir">tools/</span><span class="tree-file">github_tools.py</span>     <span class="tree-desc"># 4 LangChain BaseTool implementations</span><br>
+│<br>
+└── <span class="tree-dir">reports/generated/</span>               <span class="tree-desc"># Output: .md files per analysis</span><br>
+    ├── <span class="tree-file">01_repo_structure.md</span><br>
+    ├── <span class="tree-file">02_issue_analysis.md</span><br>
+    ├── <span class="tree-file">03_pr_analysis.md</span><br>
+    ├── <span class="tree-file">04_branch_analysis.md</span><br>
+    └── <span class="tree-file">{owner}_{repo}_report.md</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AGENTS ════════════════════════════════════════════════════════════ -->
+<div class="section" id="agents">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(167,139,250,0.1);color:var(--purple)">🤖</span>
+    The 4 Specialized Agents
+  </div>
+  <div class="grid-2">
+    <div class="agent-card blue">
+      <div class="agent-name">Repository Structure Agent</div>
+      <div class="agent-role">Senior Repository Architect</div>
+      <div class="agent-desc">Analyzes file tree, language breakdown, metadata, and top contributors. Maps the tech stack from directory structure.</div>
+      <span class="agent-tag">get_repository</span>
+      <span class="agent-tag">get_file_tree</span>
+      <span class="agent-tag">get_languages</span>
+      <span class="agent-tag">get_contributors</span>
+      <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--text3)">Output → <span style="color:var(--cyan)">01_repo_structure.md</span></div>
+    </div>
+    <div class="agent-card amber">
+      <div class="agent-name">Issue Analyzer Agent</div>
+      <div class="agent-role">Senior DevOps Issue Analyst</div>
+      <div class="agent-desc">Counts open vs closed issues, identifies label patterns (bug/feature/docs), assesses health score with resolution rate.</div>
+      <span class="agent-tag">list_issues</span>
+      <span class="agent-tag">label_distribution</span>
+      <span class="agent-tag">issue_health_score</span>
+      <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--text3)">Output → <span style="color:var(--cyan)">02_issue_analysis.md</span></div>
+    </div>
+    <div class="agent-card green">
+      <div class="agent-name">PR Analyzer Agent</div>
+      <div class="agent-role">Senior Code Review &amp; CI/CD Analyst</div>
+      <div class="agent-desc">Measures PR velocity, review depth (avg comments), merge rate, and contribution diversity. Scores review culture.</div>
+      <span class="agent-tag">list_pull_requests</span>
+      <span class="agent-tag">avg_comments</span>
+      <span class="agent-tag">merge_rate</span>
+      <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--text3)">Output → <span style="color:var(--cyan)">03_pr_analysis.md</span></div>
+    </div>
+    <div class="agent-card coral">
+      <div class="agent-name">Branch Analyzer Agent</div>
+      <div class="agent-role">Senior Git Strategy Analyst</div>
+      <div class="agent-desc">Identifies branching strategy (GitFlow vs GitHub Flow vs trunk), analyzes commit quality, and checks default branch protection.</div>
+      <span class="agent-tag">list_branches</span>
+      <span class="agent-tag">get_commits</span>
+      <span class="agent-tag">branch_protection</span>
+      <div style="margin-top:0.75rem;font-size:0.75rem;color:var(--text3)">Output → <span style="color:var(--cyan)">04_branch_analysis.md</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ WORKFLOW ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="workflow">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(52,211,153,0.1);color:var(--green)">⚡</span>
+    Request Workflow (20 Steps)
+  </div>
+  <div class="flow-steps">
+    <div class="flow-step"><div class="step-num">1</div><div class="step-content"><h4>User visits the home page</h4><p>Django <code>index</code> view renders the input form at <code>GET /</code></p></div></div>
+    <div class="flow-step"><div class="step-num">2</div><div class="step-content"><h4>User submits repository URL</h4><p>Form POSTs <code>django/django</code> to <code>POST /analyze/</code></p></div></div>
+    <div class="flow-step"><div class="step-num">3</div><div class="step-content"><h4>Django parses the URL</h4><p><code>parse_github_url()</code> extracts <code>owner="django"</code>, <code>repo="django"</code></p></div></div>
+    <div class="flow-step"><div class="step-num">4</div><div class="step-content"><h4>Django renders loading page</h4><p><code>analyze</code> view returns <code>loading.html</code> with owner/repo context</p></div></div>
+    <div class="flow-step"><div class="step-num">5</div><div class="step-content"><h4>JS triggers AJAX analysis</h4><p><code>fetch('/run/django/django/', {method:'POST'})</code> fires immediately</p></div></div>
+    <div class="flow-step"><div class="step-num">6</div><div class="step-content"><h4>Django instantiates CrewAI</h4><p><code>run_analysis</code> view calls <code>GitHubAnalyzerCrew().run("django","django")</code></p></div></div>
+    <div class="flow-step"><div class="step-num">7</div><div class="step-content"><h4>CrewAI creates 4 agents</h4><p>Each agent gets a role, goal, backstory, tools, and GPT-4o as its LLM</p></div></div>
+    <div class="flow-step"><div class="step-num">8</div><div class="step-content"><h4>CrewAI creates 4 tasks</h4><p>Each task has a description prompt with <code>{owner}/{repo}</code> injected</p></div></div>
+    <div class="flow-step"><div class="step-num">9</div><div class="step-content"><h4>Crew kicks off: Task 1 starts</h4><p><code>crew.kickoff()</code> → <code>Process.sequential</code> → Agent 1 receives Task 1</p></div></div>
+    <div class="flow-step"><div class="step-num">10</div><div class="step-content"><h4>Agent 1 calls LangChain tool</h4><p><code>GitHubRepoStructureTool._run(owner, repo)</code> executes</p></div></div>
+    <div class="flow-step"><div class="step-num">11</div><div class="step-content"><h4>Tool calls MCP client × 4</h4><p><code>mcp_client.call_tool("get_repository", ...)</code> × 4 endpoints</p></div></div>
+    <div class="flow-step"><div class="step-num">12</div><div class="step-content"><h4>MCP routes to GitHub API</h4><p>Direct REST calls to <code>api.github.com/repos/django/django</code> etc.</p></div></div>
+    <div class="flow-step"><div class="step-num">13</div><div class="step-content"><h4>Agent 1 synthesizes with GPT-4o</h4><p>LLM receives JSON data + task prompt → writes Markdown analysis section</p></div></div>
+    <div class="flow-step"><div class="step-num">14</div><div class="step-content"><h4>Task 1 output saved to disk</h4><p><code>01_repo_structure.md</code> written to <code>reports/generated/</code></p></div></div>
+    <div class="flow-step"><div class="step-num">15</div><div class="step-content"><h4>Agents 2–4 run sequentially</h4><p>Issue → PR → Branch agents repeat steps 10–14 with their own tools</p></div></div>
+    <div class="flow-step"><div class="step-num">16</div><div class="step-content"><h4>crew_assembler combines sections</h4><p>All 4 .md files assembled into <code>django_django_report.md</code></p></div></div>
+    <div class="flow-step"><div class="step-num">17</div><div class="step-content"><h4>AJAX returns success JSON</h4><p><code>{"status":"complete","redirect":"/report/django/django/"}</code></p></div></div>
+    <div class="flow-step"><div class="step-num">18</div><div class="step-content"><h4>Browser navigates to report</h4><p><code>window.location.href = "/report/django/django/"</code></p></div></div>
+    <div class="flow-step"><div class="step-num">19</div><div class="step-content"><h4>Django reads Markdown file</h4><p><code>report</code> view reads <code>django_django_report.md</code> from disk</p></div></div>
+    <div class="flow-step"><div class="step-num">20</div><div class="step-content"><h4>Markdown rendered as HTML</h4><p><code>python-markdown</code> converts to HTML → <code>report.html</code> renders tabbed interface</p></div></div>
+  </div>
+</div>
+
+<!-- ══ KEY CODE PATTERNS ══════════════════════════════════════════════════ -->
+<div class="section" id="code">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(251,191,36,0.1);color:var(--amber)">⌨️</span>
+    Key Code Patterns
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="showTab('agents-code',this)">Agent</button>
+    <button class="tab-btn" onclick="showTab('tool-code',this)">Tool</button>
+    <button class="tab-btn" onclick="showTab('mcp-code',this)">MCP Client</button>
+    <button class="tab-btn" onclick="showTab('crew-code',this)">Crew</button>
+    <button class="tab-btn" onclick="showTab('view-code',this)">Django View</button>
+  </div>
+
+  <div id="agents-code" class="tab-panel active">
+<pre><span class="cm"># crew/agents/github_agents.py</span>
+<span class="kw">from</span> crewai <span class="kw">import</span> Agent
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+
+<span class="kw">def</span> <span class="fn">create_repo_structure_agent</span>() -> Agent:
+    <span class="kw">return</span> <span class="cls">Agent</span>(
+        role=<span class="str">"Senior Repository Architect"</span>,
+        goal=<span class="str">"Analyze file tree, languages, and contributors..."</span>,
+        backstory=<span class="str">"You are a veteran software architect with 15+ years..."</span>,
+        tools=[<span class="cls">GitHubRepoStructureTool</span>()],
+        llm=<span class="cls">ChatOpenAI</span>(model=<span class="str">"gpt-4o"</span>, temperature=<span class="num">0.2</span>),
+        verbose=<span class="kw">True</span>,
+        allow_delegation=<span class="kw">False</span>,
+        max_iter=<span class="num">3</span>,
+    )</pre>
+  </div>
+
+  <div id="tool-code" class="tab-panel">
+<pre><span class="cm"># crew/tools/github_tools.py</span>
+<span class="kw">from</span> langchain.tools <span class="kw">import</span> BaseTool
+
+<span class="kw">class</span> <span class="cls">GitHubRepoStructureTool</span>(<span class="cls">BaseTool</span>):
+    name: str = <span class="str">"github_repo_structure"</span>
+    description: str = <span class="str">"Analyzes GitHub repository structure..."</span>
+    args_schema: Type[BaseModel] = <span class="cls">RepoInput</span>
+
+    <span class="kw">def</span> <span class="fn">_run</span>(<span class="kw">self</span>, owner: str, repo: str) -> str:
+        results = {}
+        results[<span class="str">"metadata"</span>] = mcp_client.call_tool(
+            <span class="str">"get_repository"</span>, {<span class="str">"owner"</span>: owner, <span class="str">"repo"</span>: repo}
+        )
+        results[<span class="str">"languages"</span>] = mcp_client.call_tool(
+            <span class="str">"get_languages"</span>, {<span class="str">"owner"</span>: owner, <span class="str">"repo"</span>: repo}
+        )
+        <span class="kw">return</span> json.dumps(results, indent=<span class="num">2</span>)</pre>
+  </div>
+
+  <div id="mcp-code" class="tab-panel">
+<pre><span class="cm"># mcp/github_mcp_client.py</span>
+<span class="kw">class</span> <span class="cls">MCPGitHubClient</span>:
+    <span class="kw">def</span> <span class="fn">call_tool</span>(<span class="kw">self</span>, tool_name: str, arguments: dict) -> dict:
+        <span class="kw">if</span> <span class="kw">self</span>.use_mcp:
+            <span class="cm"># Route to actual MCP server</span>
+            <span class="kw">return</span> <span class="kw">self</span>._call_mcp_server(tool_name, arguments)
+        <span class="kw">else</span>:
+            <span class="cm"># Fallback: direct GitHub REST API</span>
+            <span class="kw">return</span> <span class="kw">self</span>._call_direct(tool_name, arguments)
+
+    <span class="kw">def</span> <span class="fn">_call_mcp_server</span>(<span class="kw">self</span>, tool_name, arguments):
+        response = requests.post(
+            <span class="str">f"{self.mcp_url}/tools/call"</span>,
+            json={<span class="str">"tool"</span>: tool_name, <span class="str">"arguments"</span>: arguments},
+        )
+        <span class="kw">return</span> response.json()</pre>
+  </div>
+
+  <div id="crew-code" class="tab-panel">
+<pre><span class="cm"># crew/crew_assembler.py</span>
+<span class="kw">from</span> crewai <span class="kw">import</span> Crew, Process
+
+<span class="kw">class</span> <span class="cls">GitHubAnalyzerCrew</span>:
+    <span class="kw">def</span> <span class="fn">run</span>(<span class="kw">self</span>, owner: str, repo: str) -> dict:
+        agents = create_all_agents()    <span class="cm"># 4 agents</span>
+        tasks  = create_all_tasks(      <span class="cm"># 4 tasks</span>
+            agents, owner, repo
+        )
+        crew = <span class="cls">Crew</span>(
+            agents=list(agents.values()),
+            tasks=tasks,
+            process=Process.sequential, <span class="cm"># sequential pipeline</span>
+            verbose=<span class="kw">True</span>,
+        )
+        crew_output = crew.kickoff()
+        <span class="kw">return</span> {<span class="str">"success"</span>: <span class="kw">True</span>, <span class="str">"final_report"</span>: ...}</pre>
+  </div>
+
+  <div id="view-code" class="tab-panel">
+<pre><span class="cm"># analyzer/views.py</span>
+<span class="kw">def</span> <span class="fn">run_analysis</span>(request, owner, repo):
+    <span class="cm"># Called by AJAX from loading.html</span>
+    <span class="kw">from</span> crew.crew_assembler <span class="kw">import</span> GitHubAnalyzerCrew
+    crew = <span class="cls">GitHubAnalyzerCrew</span>(reports_dir=settings.REPORTS_DIR)
+    result = crew.run(owner, repo)
+
+    <span class="kw">if</span> result.get(<span class="str">"success"</span>):
+        <span class="kw">return</span> JsonResponse({
+            <span class="str">"status"</span>: <span class="str">"complete"</span>,
+            <span class="str">"redirect"</span>: <span class="str">f"/report/{owner}/{repo}/"</span>,
+        })
+
+<span class="kw">def</span> <span class="fn">report</span>(request, owner, repo):
+    <span class="cm"># Render saved Markdown as HTML</span>
+    md_content = report_path.read_text()
+    html_content = markdown_to_html(md_content)
+    <span class="kw">return</span> render(request, <span class="str">"analyzer/report.html"</span>, {
+        <span class="str">"html_content"</span>: html_content,
+    })</pre>
+  </div>
+</div>
+
+<!-- ══ INTERVIEW ══════════════════════════════════════════════════════════ -->
+<div class="section" id="interview">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(248,113,113,0.1);color:var(--coral)">🎤</span>
+    Interview Pitches
+  </div>
+  <div class="pitch-box">
+    <div class="pitch-label">⏱ 30-Second Pitch</div>
+    <div class="pitch-text">"I built an agentic AI system that analyzes any GitHub repository. Four specialized AI agents — structure, issue, PR, and branch analysts — each use LangChain tools to call the GitHub MCP server, then synthesize their findings into a structured Markdown report. Django converts this to a tabbed HTML interface. It uses CrewAI for orchestration, OpenAI GPT-4o for reasoning, and follows a sequential task pipeline where each agent builds on the previous one's context."</div>
+  </div>
+  <div class="pitch-box">
+    <div class="pitch-label">⏱ 2-Minute Explanation</div>
+    <div class="pitch-text">"The project has four layers. First, Django provides the web interface — a form, a loading screen that shows live agent progress via AJAX, and a report renderer that converts Markdown to styled HTML. Second, CrewAI orchestrates four specialized agents in a sequential pipeline. Third, LangChain tools wrap the data layer — each agent uses a BaseTool implementation with Pydantic input validation. Fourth, the MCP Client wraps GitHub's REST API and can route calls through a real MCP server or fall back to direct API calls. The result: input a repository, get a professional analysis in 60–90 seconds."</div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">🧠 Key Concepts to Know Cold</div>
+    <table>
+      <tr><th>Concept</th><th>One-line definition</th></tr>
+      <tr><td>Agentic AI</td><td>AI that takes actions, calls tools, and makes decisions autonomously to achieve a goal</td></tr>
+      <tr><td>CrewAI</td><td>Framework for role-based multi-agent systems built on LangChain — agents have roles, goals, backstories</td></tr>
+      <tr><td>MCP Protocol</td><td>Anthropic's open standard for LLMs to call external tools — "USB for AI tools"</td></tr>
+      <tr><td>LangChain Tool</td><td>A BaseTool subclass that defines a capability — name, description, _run() method</td></tr>
+      <tr><td>Process.sequential</td><td>CrewAI execution mode where tasks run one-by-one, each task's output available to next</td></tr>
+      <tr><td>Task pipeline</td><td>Ordered list of tasks with agent assignments and expected outputs</td></tr>
+      <tr><td>Orchestration</td><td>Coordinating multiple agents/tasks to complete a complex goal</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══ Q&A ════════════════════════════════════════════════════════════════ -->
+<div class="section" id="qa">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(34,211,238,0.1);color:var(--cyan)">❓</span>
+    Interview Q&amp;A
+  </div>
+
+  <div style="margin-bottom:1rem;font-size:0.8rem;color:var(--text3)">Click any question to expand the answer.</div>
+
+  <div class="qa-list">
+    <!-- Basic -->
+    <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--green);padding:0.75rem 0 0.25rem">Basic</div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">What is Agentic AI? <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">Agentic AI refers to AI systems where one or more LLMs act as autonomous agents — taking actions, calling tools, and making decisions to achieve a goal, rather than just generating a single response. The key characteristics are: goal-directedness (works toward a defined objective), tool use (calls external APIs), reasoning loops (thinks through problems step-by-step), and autonomy (decides HOW to achieve the goal). In this project, each of the four agents autonomously decides which tool calls to make, what data to request, and how to synthesize the results into a report.</div></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">What is MCP (Model Context Protocol)? <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">MCP is an open protocol created by Anthropic that standardizes how AI models interact with external tools and data sources. Think of it as "USB for AI tools" — it defines a common interface so that any tool server can expose its capabilities to any compatible AI model. The protocol uses JSON-RPC and defines schemas for tool discovery (list_tools) and execution (call_tool). GitHub has an official MCP server that wraps their REST API. In this project, MCPGitHubClient wraps both the MCP protocol and the direct GitHub REST API as a fallback.</div></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">Why use multiple agents instead of one? <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">Multiple specialized agents outperform a single generalist agent for four reasons: (1) Context window efficiency — each agent only has the context it needs, not the entire analysis; (2) Specialization — an agent with the role "Senior Issue Analyst" produces better issue analysis than a generic agent because the LLM "acts as" that role; (3) Separation of concerns — adding a new analysis dimension means adding a new agent, not modifying a monolith; (4) Sequential context building — in Process.sequential, each agent's output becomes available to subsequent agents, enabling progressively richer analysis.</div></div>
+    </div>
+    <!-- Intermediate -->
+    <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--amber);padding:0.75rem 0 0.25rem">Intermediate</div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">How does Django integrate with CrewAI? <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">Django handles HTTP — receiving the repository URL, routing to views, and rendering templates. CrewAI is a Python library, so it's imported directly in the Django view and called synchronously. The run_analysis view is an AJAX endpoint that blocks while CrewAI runs (~60-90 seconds), then returns JSON with a redirect URL. The loading page provides real-time UX feedback while analysis runs via simulated step progress. For production scale, CrewAI execution would move to a Celery task queue with WebSocket updates replacing AJAX polling.</div></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">Walk me through what happens when a repo URL is submitted. <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">1. Browser POSTs to /analyze/ with the URL. 2. analyze view parses "django/django" from the input. 3. View renders loading.html with owner/repo. 4. JS in loading.html immediately POSTs to /run/django/django/. 5. run_analysis view calls GitHubAnalyzerCrew().run("django","django"). 6. Crew creates 4 agents and 4 tasks. 7. Task 1: Agent 1 uses GitHubRepoStructureTool → calls MCP client 4 times → LLM synthesizes → writes 01_repo_structure.md. 8. Tasks 2-4 run sequentially. 9. crew_assembler combines sections → saves django_django_report.md. 10. AJAX returns {"status":"complete","redirect":"/report/django/django/"}. 11. Browser navigates to report. 12. report view reads .md, converts to HTML, renders report.html.</div></div>
+    </div>
+    <!-- Advanced -->
+    <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--coral);padding:0.75rem 0 0.25rem">Advanced</div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">How would you make agents run in parallel? <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">CrewAI supports Process.hierarchical where a manager agent delegates tasks, but true parallelism requires custom implementation. Options: (1) Use asyncio.gather() to run four separate CrewAI instances concurrently; (2) Use concurrent.futures.ThreadPoolExecutor (OpenAI calls are I/O-bound so threads are appropriate); (3) Use LangGraph instead of CrewAI for fine-grained DAG execution control. The trade-off: parallel agents lose sequential context — Task 4 couldn't reference Task 1's findings. For this project, the sequential context sharing is intentional and architecturally valuable.</div></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">What are the failure modes and how do you handle them? <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">(1) OpenAI API failure — wrapped in try/catch, returns error report with guidance; (2) GitHub API rate limit (60 req/hr unauthenticated) — GITHUB_TOKEN raises limit to 5000/hr; (3) Private repositories — token with repo scope required; (4) LLM hallucination — mitigated by low temperature (0.2) and explicit task prompts with real data injected; (5) Long-running analysis — AJAX pattern with 300s timeout; (6) MCP server down — automatic fallback to direct GitHub REST API; (7) Network timeouts — requests.Session with 30s timeout per call.</div></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q" onclick="toggleQA(this)">How does MCP differ from standard LangChain function calling? <span class="arrow">▾</span></div>
+      <div class="qa-a"><div class="qa-a-inner">Standard LangChain function calling embeds tool schemas directly in the LLM prompt via JSON. MCP is a transport protocol — it separates tool definition (on the MCP server) from tool invocation (by the client). Advantages of MCP: (1) Tools are discovered at runtime via list_tools — no hardcoding; (2) Tools can be shared across different AI systems (Claude, GPT, local models); (3) Tool servers can be updated independently without redeploying the agent; (4) MCP enables tool composition — one MCP server aggregating many upstream APIs. It's the difference between a tightly coupled function call and a loosely coupled microservice.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESUME BULLETS ══════════════════════════════════════════════════════ -->
+<div class="section" id="resume">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(167,139,250,0.1);color:var(--purple)">📝</span>
+    Resume Bullet Points
+  </div>
+  <div class="card">
+    <div class="resume-item"><span class="resume-bullet">▸</span><span>Architected a production-grade multi-agent AI system using CrewAI, LangChain, and GitHub MCP Server to autonomously analyze GitHub repositories, generating structured health reports across 4 analysis dimensions.</span></div>
+    <div class="resume-item"><span class="resume-bullet">▸</span><span>Designed a 4-agent sequential pipeline (Structure, Issues, PR, Branch analyzers) each backed by GPT-4o via LangChain BaseTool wrappers, producing scored Markdown reports with actionable recommendations.</span></div>
+    <div class="resume-item"><span class="resume-bullet">▸</span><span>Integrated GitHub's Model Context Protocol (MCP) server as the data layer, implementing a resilient dual-path client with automatic fallback from MCP protocol to direct REST API calls.</span></div>
+    <div class="resume-item"><span class="resume-bullet">▸</span><span>Built a full-stack Django web interface with async AJAX report generation, real-time agent progress UI, and Markdown-to-HTML report rendering with tabbed navigation and syntax highlighting.</span></div>
+    <div class="resume-item"><span class="resume-bullet">▸</span><span>Implemented production-ready patterns: env-based configuration, graceful error handling, report caching, Markdown export, and zero-dependency demo mode for testing without API keys.</span></div>
+  </div>
+</div>
+
+<!-- ══ DEPLOYMENT ════════════════════════════════════════════════════════ -->
+<div class="section" id="deploy">
+  <div class="section-title">
+    <span class="icon" style="background:rgba(52,211,153,0.1);color:var(--green)">🚀</span>
+    Setup &amp; Deployment
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card-title" style="margin-bottom:0.75rem">Local Development</div>
+<pre>git clone &lt;repo&gt;
+cd github_analyzer
+python -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+cp .env.example .env
+<span class="cm"># Edit .env: add OPENAI_API_KEY + GITHUB_TOKEN</span>
+
+python manage.py migrate
+python manage.py runserver
+<span class="cm"># Open: http://localhost:8000</span></pre>
+    </div>
+    <div>
+      <div class="card-title" style="margin-bottom:0.75rem">Demo Mode (No API Keys)</div>
+<pre><span class="cm"># Generate a mock report to test the UI</span>
+python demo_report.py django/django
+
+python manage.py runserver
+<span class="cm"># View: http://localhost:8000/report/django/django/</span>
+
+<span class="cm"># Other demo repos available:</span>
+python demo_report.py tiangolo/fastapi</pre>
+
+      <div class="card-title" style="margin-bottom:0.75rem;margin-top:1rem">Production (Gunicorn)</div>
+<pre>gunicorn github_analyzer.wsgi \
+  --bind 0.0.0.0:8000 \
+  --workers 4 \
+  --timeout 300</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <div class="card-title">Environment Variables</div>
+    <table>
+      <tr><th>Variable</th><th>Required</th><th>Purpose</th></tr>
+      <tr><td>OPENAI_API_KEY</td><td style="color:var(--green)">✅ Yes</td><td>OpenAI GPT-4o for agent reasoning</td></tr>
+      <tr><td>GITHUB_TOKEN</td><td style="color:var(--amber)">Recommended</td><td>5000 req/hr vs 60 req/hr unauthenticated</td></tr>
+      <tr><td>DJANGO_SECRET_KEY</td><td style="color:var(--green)">✅ Production</td><td>Django session security</td></tr>
+      <tr><td>DJANGO_DEBUG</td><td style="color:var(--text3)">Optional</td><td>Set False in production</td></tr>
+      <tr><td>GITHUB_MCP_SERVER_URL</td><td style="color:var(--text3)">Optional</td><td>URL of running MCP server (falls back to direct API)</td></tr>
+      <tr><td>OPENAI_MODEL</td><td style="color:var(--text3)">Optional</td><td>Default: gpt-4o</td></tr>
+    </table>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleQA(el) {
+  el.closest('.qa-item').classList.toggle('open');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# ============================================================
+# Agentic GitHub Repository Analyzer
+# requirements.txt
+# ============================================================
+
+# Core Framework
+django==4.2.9
+python-dotenv==1.0.0
+
+# CrewAI - Multi-Agent Orchestration
+crewai==0.28.8
+crewai-tools==0.1.6
+
+# LangChain - Tool Wrapping & LLM Integration
+langchain==0.1.16
+langchain-openai==0.1.3
+langchain-community==0.0.36
+
+# OpenAI LLM Backend
+openai==1.23.2
+
+# MCP (Model Context Protocol) Client
+mcp==0.9.1
+httpx==0.27.0
+httpx-sse==0.4.0
+
+# Markdown Processing
+markdown==3.6
+markdown2==2.4.13
+Pygments==2.17.2
+
+# Async Support
+asyncio==3.4.3
+aiohttp==3.9.5
+
+# Utilities
+requests==2.31.0
+pydantic==2.7.1
+pydantic-settings==2.2.1
+python-decouple==3.8
+
+# Development
+black==24.4.2
+flake8==7.0.0

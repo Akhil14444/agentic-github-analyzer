@@ -1,0 +1,381 @@
+{% extends "analyzer/base.html" %}
+
+{% block title %}Analyzing {{ owner }}/{{ repo }}...{% endblock %}
+
+{% block content %}
+<div class="loading-page">
+  
+  <!-- Header -->
+  <div class="loading-header">
+    <div class="repo-badge">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8z"/></svg>
+      <span>{{ owner }}/{{ repo }}</span>
+    </div>
+    <h1 class="loading-title">Analyzing Repository</h1>
+    <p class="loading-subtitle">4 AI agents are working in parallel to analyze your repository</p>
+  </div>
+
+  <!-- Progress Section -->
+  <div class="progress-container">
+    
+    <!-- Overall Progress Bar -->
+    <div class="overall-progress">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="overallProgress"></div>
+      </div>
+      <span class="progress-label" id="progressLabel">Initializing agents...</span>
+    </div>
+
+    <!-- Agent Cards -->
+    <div class="agents-grid">
+      
+      <div class="agent-card" id="agent-1" data-step="1">
+        <div class="agent-icon agent-blue">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM9 9h6M9 13h6M9 17h4"/></svg>
+        </div>
+        <div class="agent-info">
+          <div class="agent-name">Repository Structure Agent</div>
+          <div class="agent-task">Analyzing file tree, languages & contributors</div>
+        </div>
+        <div class="agent-status" id="status-1">
+          <div class="status-dot waiting"></div>
+          <span>Waiting</span>
+        </div>
+      </div>
+
+      <div class="agent-card" id="agent-2" data-step="2">
+        <div class="agent-icon agent-amber">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="agent-info">
+          <div class="agent-name">Issue Analyzer Agent</div>
+          <div class="agent-task">Scanning open/closed issues & label patterns</div>
+        </div>
+        <div class="agent-status" id="status-2">
+          <div class="status-dot waiting"></div>
+          <span>Waiting</span>
+        </div>
+      </div>
+
+      <div class="agent-card" id="agent-3" data-step="3">
+        <div class="agent-icon agent-green">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+        </div>
+        <div class="agent-info">
+          <div class="agent-name">Pull Request Analyzer Agent</div>
+          <div class="agent-task">Measuring PR velocity & review culture</div>
+        </div>
+        <div class="agent-status" id="status-3">
+          <div class="status-dot waiting"></div>
+          <span>Waiting</span>
+        </div>
+      </div>
+
+      <div class="agent-card" id="agent-4" data-step="4">
+        <div class="agent-icon agent-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>
+        </div>
+        <div class="agent-info">
+          <div class="agent-name">Branch Analyzer Agent</div>
+          <div class="agent-task">Mapping branch strategy & commit patterns</div>
+        </div>
+        <div class="agent-status" id="status-4">
+          <div class="status-dot waiting"></div>
+          <span>Waiting</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MCP Server Indicator -->
+    <div class="mcp-indicator">
+      <div class="mcp-pulse"></div>
+      <span>GitHub MCP Server active — fetching live repository data</span>
+    </div>
+
+    <!-- Error Display -->
+    <div class="error-container" id="errorContainer" style="display:none;">
+      <div class="error-icon">⚠️</div>
+      <div class="error-text" id="errorText"></div>
+      <a href="/" class="btn-secondary">← Try Another Repository</a>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.loading-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.loading-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.repo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-bright);
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--accent-cyan);
+  margin-bottom: 1.5rem;
+}
+
+.loading-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.loading-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.overall-progress {
+  margin-bottom: 2rem;
+}
+
+.progress-bar-track {
+  height: 6px;
+  background: var(--bg-card);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+  border-radius: 3px;
+  transition: width 0.8s ease;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+}
+
+.progress-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.agents-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.agent-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.agent-card.active {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  background: var(--bg-hover);
+}
+
+.agent-card.complete {
+  border-color: var(--accent-green);
+  opacity: 0.8;
+}
+
+.agent-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.agent-blue   { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+.agent-amber  { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+.agent-green  { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+.agent-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+
+.agent-info { flex: 1; }
+
+.agent-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.agent-task {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.waiting  { background: var(--text-muted); }
+.status-dot.running  { background: var(--accent-blue); animation: pulse 1s infinite; }
+.status-dot.complete { background: var(--accent-green); }
+.status-dot.error    { background: var(--accent-red); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.mcp-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(6,182,212,0.08);
+  border: 1px solid rgba(6,182,212,0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  color: var(--accent-cyan);
+}
+
+.mcp-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  animation: pulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.error-container {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.error-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+
+.error-text {
+  color: var(--accent-red);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+</style>
+
+<script>
+(function() {
+  const owner = "{{ owner }}";
+  const repo  = "{{ repo }}";
+  
+  const steps = [
+    { id: 1, label: "Repository Structure Agent running..." },
+    { id: 2, label: "Issue Analyzer Agent running..." },
+    { id: 3, label: "Pull Request Analyzer Agent running..." },
+    { id: 4, label: "Branch Analyzer Agent running..." },
+  ];
+
+  let currentStep = 0;
+  const progressBar   = document.getElementById("overallProgress");
+  const progressLabel = document.getElementById("progressLabel");
+
+  function setAgentStatus(id, state, label) {
+    const card   = document.getElementById(`agent-${id}`);
+    const status = document.getElementById(`status-${id}`);
+    const dot    = status.querySelector(".status-dot");
+    const span   = status.querySelector("span");
+
+    card.classList.remove("active", "complete");
+    dot.classList.remove("waiting", "running", "complete", "error");
+
+    if (state === "running") {
+      card.classList.add("active");
+      dot.classList.add("running");
+      span.textContent = "Running";
+    } else if (state === "complete") {
+      card.classList.add("complete");
+      dot.classList.add("complete");
+      span.textContent = "✓ Done";
+    } else if (state === "error") {
+      dot.classList.add("error");
+      span.textContent = "Failed";
+    }
+  }
+
+  // Simulate step-by-step progress while backend runs
+  function advanceStep() {
+    if (currentStep > 0) {
+      setAgentStatus(currentStep, "complete");
+    }
+    currentStep++;
+    if (currentStep <= steps.length) {
+      const step = steps[currentStep - 1];
+      setAgentStatus(step.id, "running");
+      progressBar.style.width = `${(currentStep / (steps.length + 1)) * 85}%`;
+      progressLabel.textContent = step.label;
+      setTimeout(advanceStep, 12000); // ~12s per step
+    }
+  }
+
+  advanceStep();
+
+  // Kick off the actual analysis via AJAX
+  fetch(`/run/${owner}/${repo}/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": "{{ csrf_token }}",
+      "Content-Type": "application/json",
+    },
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === "complete") {
+      // All done — finalize UI then redirect
+      for (let i = 1; i <= 4; i++) setAgentStatus(i, "complete");
+      progressBar.style.width = "100%";
+      progressLabel.textContent = "Analysis complete! Loading report...";
+      setTimeout(() => { window.location.href = data.redirect; }, 800);
+    } else {
+      showError(data.message || "Analysis failed.");
+    }
+  })
+  .catch(err => showError("Network error: " + err.message));
+
+  function showError(msg) {
+    document.getElementById("errorText").textContent = msg;
+    document.getElementById("errorContainer").style.display = "block";
+    progressLabel.textContent = "Analysis failed.";
+  }
+})();
+</script>
+{% endblock %}
