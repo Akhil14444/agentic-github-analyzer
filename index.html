@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic GitHub Repository Analyzer — Ankush Sharma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090f;--bg2:#0c1120;--bg3:#111827;
+  --card:#141e33;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --blue:#4f8fff;--cyan:#22d3ee;--green:#34d399;
+  --amber:#fbbf24;--purple:#a78bfa;--coral:#f87171;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --mono:'JetBrains Mono',monospace;--sans:'Outfit',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.7;min-height:100vh}
+.nav{background:rgba(6,9,15,0.96);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.ndot{width:8px;height:8px;border-radius:50%;background:var(--cyan);animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+.ntitle{font-weight:700;font-size:.9rem;color:var(--cyan)}
+.ntag{background:rgba(79,143,255,.12);border:1px solid rgba(79,143,255,.25);border-radius:20px;padding:3px 10px;font-size:.7rem;color:var(--blue);font-family:var(--mono)}
+.nright{font-size:.8rem;color:var(--text3);display:flex;gap:.75rem;align-items:center}
+.nright a{color:var(--text2);text-decoration:none}.nright a:hover{color:var(--cyan)}
+.hero{text-align:center;padding:3.5rem 1.5rem 2.5rem;max-width:700px;margin:0 auto}
+.htag{display:inline-flex;align-items:center;gap:8px;background:rgba(79,143,255,.08);border:1px solid rgba(79,143,255,.2);border-radius:20px;padding:5px 14px;font-size:.74rem;color:var(--blue);font-family:var(--mono);margin-bottom:1.4rem}
+.hero h1{font-size:clamp(1.75rem,5vw,2.5rem);font-weight:800;line-height:1.15;margin-bottom:.7rem}
+.hero h1 em{font-style:normal;color:var(--cyan)}
+.hero p{color:var(--text2);font-size:.93rem;max-width:520px;margin:0 auto 1.75rem}
+.techrow{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:2.5rem}
+.tech{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:3px 11px;font-size:.7rem;color:var(--text2);font-family:var(--mono)}
+.icard{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:1.75rem 2rem;max-width:700px;margin:0 auto 2.5rem}
+.flbl{font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:.5rem}
+.irow{display:flex;gap:8px;margin-bottom:1rem}
+.ri{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-size:.88rem;font-family:var(--mono);outline:none;transition:border-color .2s}
+.ri:focus{border-color:var(--blue)}.ri::placeholder{color:var(--text3)}
+.gbtn{background:var(--blue);border:none;border-radius:10px;padding:11px 22px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;white-space:nowrap}
+.gbtn:hover{background:#3b7de0}.gbtn:disabled{opacity:.45;cursor:not-allowed}
+.ti{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.78rem;font-family:var(--mono);outline:none;transition:border-color .2s;margin-bottom:.5rem}
+.ti:focus{border-color:var(--green)}.ti::placeholder{color:var(--text3)}
+.thint{font-size:.72rem;color:var(--text3);margin-bottom:1rem;line-height:1.5}
+.thint a{color:var(--blue);text-decoration:none}.thint a:hover{text-decoration:underline}
+.exlbl{font-size:.73rem;color:var(--text3);margin-bottom:.45rem}
+.exrow{display:flex;flex-wrap:wrap;gap:6px}
+.ex{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:.72rem;color:var(--text2);cursor:pointer;font-family:var(--mono);transition:all .15s}
+.ex:hover{border-color:var(--blue);color:var(--blue)}
+.ebox{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:1rem 1.25rem;font-size:.83rem;color:var(--coral);display:none;margin-bottom:1rem;white-space:pre-wrap;line-height:1.65}
+.pwrap{max-width:700px;margin:0 auto 2rem;display:none}
+.ptitle{text-align:center;font-size:.95rem;font-weight:600;margin-bottom:1.25rem}
+.btrack{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:.4rem}
+.bfill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:2px;transition:width 1s ease;width:0}
+.blbl{text-align:center;font-size:.72rem;color:var(--text3);font-family:var(--mono);margin-bottom:1rem}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ag{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;display:flex;align-items:center;gap:9px;transition:all .3s}
+.ag.running{border-color:var(--blue);background:rgba(79,143,255,.06)}
+.ag.done{border-color:var(--green);background:rgba(52,211,153,.05)}
+.aicon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.aname{font-size:.8rem;font-weight:600}.astatus{font-size:.7rem;color:var(--text3);margin-top:1px}
+.adot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dw{background:var(--text3)}.dr{background:var(--blue);animation:bl .9s infinite}.dd{background:var(--green)}
+.rwrap{max-width:940px;margin:0 auto;display:none;padding:0 1rem 4rem}
+.rhdr{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:1.4rem 1.75rem;margin-bottom:1.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.rhdr h2{font-size:1.1rem;font-weight:700;margin-bottom:3px}
+.rmeta{font-size:.76rem;color:var(--text3);display:flex;gap:1rem;flex-wrap:wrap}
+.bsm{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:7px 14px;font-size:.78rem;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .2s;text-decoration:none;display:inline-block}
+.bsm:hover{color:var(--text)}
+.tabrow{display:flex;gap:3px;margin-bottom:1.2rem;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabrow::-webkit-scrollbar{display:none}
+.tab{background:none;border:none;padding:8px 15px;font-size:.8rem;font-weight:500;color:var(--text3);cursor:pointer;font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s}
+.tab:hover{color:var(--text2)}.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem 1.75rem;margin-bottom:1rem}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:1.25rem}
+.st{background:var(--bg3);border-radius:10px;padding:.9rem;text-align:center}
+.stv{font-size:1.4rem;font-weight:700;line-height:1;margin-bottom:3px}
+.stl{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.blu .stv{color:var(--blue)}.grn .stv{color:var(--green)}.amb .stv{color:var(--amber)}.pur .stv{color:var(--purple)}
+.sh{font-size:.9rem;font-weight:700;margin-bottom:.9rem;display:flex;align-items:center;gap:7px}
+.sico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.div{border:none;border-top:1px solid var(--border);margin:1.1rem 0}
+.dt{width:100%;border-collapse:collapse;font-size:.81rem;margin-bottom:.9rem}
+.dt th{text-align:left;padding:7px 11px;background:var(--bg3);color:var(--text2);font-weight:600;font-size:.69rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border2)}
+.dt td{padding:7px 11px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.dt tr:last-child td{border-bottom:none}.dt td:first-child{font-family:var(--mono);font-size:.76rem;color:var(--cyan)}
+.lr{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.ln{font-size:.78rem;font-family:var(--mono);width:90px;flex-shrink:0;color:var(--text2)}
+.lt{flex:1;height:8px;background:var(--border2);border-radius:4px;overflow:hidden}
+.lf{height:100%;border-radius:4px;transition:width 1.1s ease}
+.lp{font-size:.72rem;color:var(--text3);width:36px;text-align:right;flex-shrink:0}
+.ir{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)}
+.ir:last-child{border-bottom:none}
+.inum{font-size:.7rem;font-family:var(--mono);color:var(--text3);min-width:38px;padding-top:2px}
+.itit{font-size:.83rem;color:var(--text);flex:1}.isub{font-size:.7rem;color:var(--text3);margin-top:2px}
+.bdg{display:inline-block;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:500}
+.bop{background:rgba(52,211,153,.12);color:var(--green)}.bcl{background:rgba(148,163,184,.1);color:var(--text3)}
+.bdf{background:rgba(79,143,255,.12);color:var(--blue)}.bpr{background:rgba(52,211,153,.12);color:var(--green)}
+.pillrow{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.9rem}
+.pill{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:.7rem;color:var(--text2);font-family:var(--mono)}
+.scrow{display:flex;align-items:center;gap:1rem;padding:.9rem;background:var(--bg3);border-radius:10px;margin-bottom:.75rem}
+.scnum{font-size:2.2rem;font-weight:800;min-width:58px;text-align:center;line-height:1}
+.scinfo h4{font-size:.87rem;font-weight:600;margin-bottom:3px}.scinfo p{font-size:.78rem;color:var(--text2)}
+.scbt{height:5px;background:var(--border2);border-radius:3px;overflow:hidden;margin-top:5px}
+.scbf{height:100%;border-radius:3px;transition:width 1.2s ease}
+.rec{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.81rem;color:var(--text2)}
+.rec:last-child{border-bottom:none}.rbul{color:var(--cyan);flex-shrink:0;margin-top:2px}
+footer{text-align:center;padding:1.75rem 1rem;border-top:1px solid var(--border);font-size:.74rem;color:var(--text3)}
+@media(max-width:600px){.sgrid{grid-template-columns:repeat(2,1fr)}.agrid{grid-template-columns:1fr}.irow{flex-direction:column}.rhdr{flex-direction:column}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="ndot"></div>
+    <span class="ntitle">GitHub Repo Analyzer</span>
+    <span class="ntag">Agentic AI</span>
+  </div>
+  <div class="nright">
+    <span>CrewAI + MCP + GPT-4o</span>
+    <span>|</span>
+    <a href="https://github.com/Akhil14444" target="_blank">Ankush Sharma</a>
+  </div>
+</nav>
+<div class="hero">
+  <div class="htag">
+    <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" stroke="#4f8fff" stroke-width="1" fill="none"/><circle cx="5" cy="5" r="2" fill="#4f8fff"/></svg>
+    Multi-Agent AI System &#8212; Live Demo
+  </div>
+  <h1>Analyze any<br><em>GitHub Repository</em></h1>
+  <p>4 specialized AI agents autonomously analyze structure, issues, pull requests, and branches &#8212; generating a complete health report with scores.</p>
+  <div class="techrow">
+    <span class="tech">CrewAI</span><span class="tech">LangChain</span>
+    <span class="tech">GitHub MCP Server</span><span class="tech">OpenAI GPT-4o</span>
+    <span class="tech">Django</span><span class="tech">Python 3.11</span>
+  </div>
+</div>
+<div class="icard">
+  <div class="flbl">GitHub Repository URL</div>
+  <div class="irow">
+    <input class="ri" id="repoInput" type="text"
+      placeholder="https://github.com/owner/repo  or  owner/repo  or  owner/repo.git"
+      value="tiangolo/fastapi">
+    <button class="gbtn" id="goBtn" onclick="go()">Analyze &#8594;</button>
+  </div>
+  <div class="ebox" id="ebox"></div>
+  <div class="flbl" style="margin-top:.75rem">
+    GitHub Token
+    <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">
+      (optional &#8212; raises limit from 60 to 5000 req/hr, fixes rate limit errors)
+    </span>
+  </div>
+  <input class="ti" id="tokenInput" type="password"
+    placeholder="ghp_xxxxxxxxxxxx  (paste your GitHub Personal Access Token here)"
+    oninput="TOK=this.value.trim()">
+  <div class="thint">
+    No token? Get one free at
+    <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=GitHubAnalyzer" target="_blank">github.com/settings/tokens</a>
+    &#8212; select <strong>public_repo</strong> scope. Your token stays in your browser only, never sent anywhere else.
+  </div>
+  <div class="exlbl">Quick examples:</div>
+  <div class="exrow">
+    <button class="ex" onclick="fill('tiangolo/fastapi')">tiangolo/fastapi</button>
+    <button class="ex" onclick="fill('django/django')">django/django</button>
+    <button class="ex" onclick="fill('pallets/flask')">pallets/flask</button>
+    <button class="ex" onclick="fill('microsoft/vscode')">microsoft/vscode</button>
+    <button class="ex" onclick="fill('vuejs/vue')">vuejs/vue</button>
+    <button class="ex" onclick="fill('facebook/react')">facebook/react</button>
+    <button class="ex" onclick="fill('langchain-ai/langchain')">langchain-ai/langchain</button>
+    <button class="ex" onclick="fill('joaomdmoura/crewAI')">joaomdmoura/crewAI</button>
+  </div>
+</div>
+<div class="pwrap" id="pw">
+  <div class="ptitle" id="pt">Initializing agents...</div>
+  <div class="btrack"><div class="bfill" id="bf"></div></div>
+  <div class="blbl" id="bl">Starting...</div>
+  <div class="agrid">
+    <div class="ag" id="a1"><div class="aicon" style="background:rgba(79,143,255,.12)">&#127959;</div><div style="flex:1"><div class="aname">Repository Structure Agent</div><div class="astatus" id="a1s">Waiting...</div></div><div class="adot dw" id="a1d"></div></div>
+    <div class="ag" id="a2"><div class="aicon" style="background:rgba(251,191,36,.12)">&#128027;</div><div style="flex:1"><div class="aname">Issue Analyzer Agent</div><div class="astatus" id="a2s">Waiting...</div></div><div class="adot dw" id="a2d"></div></div>
+    <div class="ag" id="a3"><div class="aicon" style="background:rgba(52,211,153,.12)">&#128260;</div><div style="flex:1"><div class="aname">PR Analyzer Agent</div><div class="astatus" id="a3s">Waiting...</div></div><div class="adot dw" id="a3d"></div></div>
+    <div class="ag" id="a4"><div class="aicon" style="background:rgba(167,139,250,.12)">&#127807;</div><div style="flex:1"><div class="aname">Branch Analyzer Agent</div><div class="astatus" id="a4s">Waiting...</div></div><div class="adot dw" id="a4d"></div></div>
+  </div>
+</div>
+<div class="rwrap" id="rw">
+  <div class="rhdr">
+    <div><h2 id="rtitle">Report</h2><div class="rmeta"><span id="rs1"></span><span id="rs2"></span><span id="rs3"></span><span>4 AI Agents</span></div></div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <a id="ghl" href="#" target="_blank" class="bsm">View on GitHub</a>
+      <button class="bsm" onclick="dlmd()">Download .md</button>
+    </div>
+  </div>
+  <div class="tabrow">
+    <button class="tab on" onclick="st('ov',this)">Overview</button>
+    <button class="tab" onclick="st('str',this)">Structure</button>
+    <button class="tab" onclick="st('iss',this)">Issues</button>
+    <button class="tab" onclick="st('pr',this)">Pull Requests</button>
+    <button class="tab" onclick="st('br',this)">Branches</button>
+    <button class="tab" onclick="st('sc',this)">Health Scores</button>
+  </div>
+  <div id="t-ov">
+    <div class="sgrid" id="ovs"></div>
+    <div class="scard">
+      <div class="sh"><span class="sico" style="background:rgba(79,143,255,.12)">&#128202;</span>Summary</div>
+      <div id="desc" style="color:var(--text2);font-size:.86rem;line-height:1.75;margin-bottom:1rem"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Topics</div>
+      <div class="pillrow" id="topics"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Top Contributors</div>
+      <table class="dt"><thead><tr><th>Contributor</th><th>Contributions</th><th>Profile</th></tr></thead><tbody id="ctrib"></tbody></table>
+    </div>
+  </div>
+  <div id="t-str" style="display:none">
+    <div class="scard">
+      <div class="sh"><span class="sico" style="background:rgba(79,143,255,.12)">&#127959;</span>Structure Analysis</div>
+      <table class="dt"><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody id="metab"></tbody></table>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Language Breakdown</div>
+      <div id="langb"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Agent Recommendations</div>
+      <div id="srec"></div>
+    </div>
+  </div>
+  <div id="t-iss" style="display:none">
+    <div class="sgrid" id="istat" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div class="scard">
+      <div class="sh"><span class="sico" style="background:rgba(251,191,36,.12)">&#128027;</span>Issue Analysis</div>
+      <div class="sh" style="font-size:.83rem">Label Distribution</div>
+      <div id="lblb"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Recent Open Issues</div>
+      <div id="issl"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Agent Recommendations</div>
+      <div id="irec"></div>
+    </div>
+  </div>
+  <div id="t-pr" style="display:none">
+    <div class="sgrid" id="prstat" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div class="scard">
+      <div class="sh"><span class="sico" style="background:rgba(52,211,153,.12)">&#128260;</span>PR Analysis</div>
+      <div class="sh" style="font-size:.83rem">Recent Open PRs</div>
+      <div id="prl"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Agent Recommendations</div>
+      <div id="prrec"></div>
+    </div>
+  </div>
+  <div id="t-br" style="display:none">
+    <div class="scard">
+      <div class="sh"><span class="sico" style="background:rgba(167,139,250,.12)">&#127807;</span>Branch Analysis</div>
+      <div class="sh" style="font-size:.83rem">All Branches</div>
+      <div id="brl"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Recent Commits</div>
+      <div id="coml"></div>
+      <div class="div"></div>
+      <div class="sh" style="font-size:.83rem">Agent Recommendations</div>
+      <div id="brrec"></div>
+    </div>
+  </div>
+  <div id="t-sc" style="display:none">
+    <div class="scard">
+      <div class="sh"><span class="sico" style="background:rgba(52,211,153,.12)">&#128200;</span>Health Scores</div>
+      <div id="scards"></div>
+      <div class="div"></div>
+      <div style="background:var(--bg3);border-radius:10px;padding:1rem">
+        <div class="sh" style="font-size:.83rem;margin-bottom:.5rem">Overall Verdict</div>
+        <div id="verd" style="font-size:.88rem;color:var(--text2);line-height:1.75"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Built by <strong>Ankush Sharma</strong> &#183; M.Tech CSE, NIT Kurukshetra &#183; Agentic GitHub Repository Analyzer &#183; CrewAI + GitHub MCP + Django + OpenAI GPT-4o</footer>
+<script>
+let TOK='',D=null,MD='';
+function fill(v){document.getElementById('repoInput').value=v;}
+function showE(m){var b=document.getElementById('ebox');b.textContent=m;b.style.display='block';}
+function hideE(){document.getElementById('ebox').style.display='none';}
+function ag(n,s,m){
+  var c=document.getElementById('a'+n),d=document.getElementById('a'+n+'d'),t=document.getElementById('a'+n+'s');
+  c.className='ag'+(s==='running'?' running':s==='done'?' done':'');
+  d.className='adot '+(s==='running'?'dr':s==='done'?'dd':'dw');
+  t.textContent=m;
+}
+function bar(p,l){document.getElementById('bf').style.width=p+'%';document.getElementById('bl').textContent=l;}
+function parse(raw){
+  raw=(raw||'').trim().replace(/\.git\s*$/i,'').trim().replace(/\/+$/,'').trim();
+  var s=raw.replace(/^https?:\/\//i,'').replace(/^www\./i,'');
+  var m=s.match(/^github\.com[\/:]([A-Za-z0-9_.\-]+)\/([A-Za-z0-9_.\-]+)/i);
+  if(m)return{owner:m[1],repo:m[2]};
+  var p=raw.split('/').filter(Boolean);
+  if(p.length>=2){var o=p[p.length-2],r=p[p.length-1];if(/^[A-Za-z0-9_.\-]+$/.test(o)&&/^[A-Za-z0-9_.\-]+$/.test(r))return{owner:o,repo:r};}
+  return null;
+}
+async function ghf(path){
+  var h={'Accept':'application/vnd.github.v3+json'};
+  if(TOK)h['Authorization']='Bearer '+TOK;
+  var r=await fetch('https://api.github.com'+path,{headers:h});
+  if(!r.ok){
+    var rem=r.headers.get('X-RateLimit-Remaining');
+    var rst=r.headers.get('X-RateLimit-Reset');
+    if(r.status===403&&rem==='0'){
+      var rt=rst?new Date(parseInt(rst)*1000).toLocaleTimeString():'soon';
+      throw new Error('GitHub API rate limit reached (60 req/hr without token).\n\nRate limit resets at: '+rt+'\n\nFIX: Paste your GitHub Token in the token field above.\nGet free token at: github.com/settings/tokens/new (select public_repo scope)');
+    }
+    if(r.status===404)throw new Error('Repository not found: '+path+'\nCheck that owner and repo name are spelled correctly.');
+    throw new Error('GitHub API error '+r.status);
+  }
+  return r.json();
+}
+async function go(){
+  hideE();
+  var raw=document.getElementById('repoInput').value;
+  var p=parse(raw);
+  if(!p){showE('Invalid URL.\nAccepted formats:\n  owner/repo\n  https://github.com/owner/repo\n  https://github.com/owner/repo.git');return;}
+  var owner=p.owner,repo=p.repo;
+  document.getElementById('goBtn').disabled=true;
+  document.getElementById('pw').style.display='block';
+  document.getElementById('rw').style.display='none';
+  [1,2,3,4].forEach(function(n){ag(n,'wait','Waiting...');});
+  bar(0,'Starting...');
+  document.getElementById('pt').textContent='Analyzing '+owner+'/'+repo+'...';
+  try{
+    ag(1,'running','Fetching metadata, languages, contributors...');
+    document.getElementById('pt').textContent='Agent 1: Repository Structure Agent';
+    bar(5,'Agent 1 running...');
+    var rd=await ghf('/repos/'+owner+'/'+repo);
+    var ld=await ghf('/repos/'+owner+'/'+repo+'/languages');
+    var cd=[];try{cd=await ghf('/repos/'+owner+'/'+repo+'/contributors?per_page=8');}catch(e){}
+    var tp=[];
+    try{var tr=await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/topics',{headers:{'Accept':'application/vnd.github.mercy-preview+json',...(TOK?{'Authorization':'Bearer '+TOK}:{})}});var tj=await tr.json();tp=tj.names||[];}catch(e){}
+    ag(1,'done','Done - structure analyzed');bar(25,'1/4 agents complete');
+    ag(2,'running','Scanning issues...');
+    document.getElementById('pt').textContent='Agent 2: Issue Analyzer Agent';
+    bar(30,'Agent 2 running...');
+    var oi=await ghf('/repos/'+owner+'/'+repo+'/issues?state=open&per_page=25');
+    var ci=await ghf('/repos/'+owner+'/'+repo+'/issues?state=closed&per_page=25');
+    var ro=oi.filter(function(i){return!i.pull_request;});
+    var rc=ci.filter(function(i){return!i.pull_request;});
+    ag(2,'done','Done - issues analyzed');bar(50,'2/4 agents complete');
+    ag(3,'running','Measuring PR velocity...');
+    document.getElementById('pt').textContent='Agent 3: Pull Request Analyzer Agent';
+    bar(55,'Agent 3 running...');
+    var op=await ghf('/repos/'+owner+'/'+repo+'/pulls?state=open&per_page=10&sort=updated');
+    var cp=await ghf('/repos/'+owner+'/'+repo+'/pulls?state=closed&per_page=10&sort=updated');
+    ag(3,'done','Done - PRs analyzed');bar(75,'3/4 agents complete');
+    ag(4,'running','Mapping branches & commits...');
+    document.getElementById('pt').textContent='Agent 4: Branch Analyzer Agent';
+    bar(80,'Agent 4 running...');
+    var db=rd.default_branch||'main';
+    var br=await ghf('/repos/'+owner+'/'+repo+'/branches?per_page=30');
+    var co=await ghf('/repos/'+owner+'/'+repo+'/commits?sha='+db+'&per_page=10');
+    ag(4,'done','Done - branches analyzed');bar(100,'All 4 agents complete!');
+    document.getElementById('pt').textContent='Assembling report...';
+    D={owner:owner,repo:repo,rd:rd,ld:ld,cd:cd,tp:tp,ro:ro,rc:rc,op:op,cp:cp,br:br,co:co};
+    await new Promise(function(r){setTimeout(r,500);});
+    document.getElementById('pw').style.display='none';
+    render(D);
+  }catch(err){
+    document.getElementById('pw').style.display='none';
+    showE(err.message);
+    document.getElementById('goBtn').disabled=false;
+  }
+}
+var LC={JavaScript:'#f7df1e',TypeScript:'#3178c6',Python:'#3776ab',Java:'#ed8b00','C++':'#00599c',C:'#a8b9cc',Go:'#00add8',Rust:'#dea584',Ruby:'#cc342d',PHP:'#777bb4','C#':'#178600',Shell:'#89e051',HTML:'#e34c26',CSS:'#563d7c',Kotlin:'#a97bff',Swift:'#ffac45',Dart:'#00b4ab',Vue:'#42b883'};
+function lc(l){return LC[l]||'#64748b';}
+function fmt(n){if(n==null)return'--';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(1)+'k';return String(n);}
+function scc(s){if(s>=8)return'var(--green)';if(s>=6)return'var(--amber)';return'var(--coral)';}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function scores(d){
+  var ro=d.ro,rc=d.rc,op=d.op,cp=d.cp,br=d.br,rd=d.rd;
+  var tot=ro.length+rc.length,rr=tot>0?Math.round(rc.length/tot*100):50;
+  var is=Math.min(10,Math.round(rr/11)+(ro.length<50?2:ro.length<150?1:0));
+  var pt=op.length+cp.length,pc=pt>0?Math.round(cp.length/pt*100):50;
+  var ps=Math.min(10,Math.round(pc/12)+(op.length<15?2:1));
+  var prot=br.filter(function(b){return b.protected;}).length;
+  var bs=Math.min(10,5+(br.length>1?1:0)+(prot>0?2:0)+(br.length>4?1:0));
+  var st=rd.stargazers_count||0;
+  var pop=Math.min(10,st>50000?9:st>10000?8:st>5000?7:st>1000?6:st>100?5:4);
+  var ov=Math.round((is+ps+bs+pop)/4*10)/10;
+  return{is:is,ps:ps,bs:bs,pop:pop,ov:ov,rr:rr,pc:pc};
+}
+function statEl(cls,v,l){return'<div class="st '+cls+'"><div class="stv">'+v+'</div><div class="stl">'+l+'</div></div>';}
+function recEl(r){return'<div class="rec"><span class="rbul">&#9658;</span><span>'+r+'</span></div>';}
+function render(d){
+  var rd=d.rd,ld=d.ld,cd=d.cd,tp=d.tp,ro=d.ro,rc=d.rc,op=d.op,cp=d.cp,br=d.br,co=d.co;
+  var owner=d.owner,repo=d.repo;
+  var sc=scores(d);
+  document.getElementById('rtitle').textContent=owner+'/'+repo+' -- Analysis Report';
+  document.getElementById('rs1').textContent='Stars: '+fmt(rd.stargazers_count);
+  document.getElementById('rs2').textContent='Forks: '+fmt(rd.forks_count);
+  document.getElementById('rs3').textContent='Updated: '+new Date(rd.updated_at).toLocaleDateString();
+  document.getElementById('ghl').href='https://github.com/'+owner+'/'+repo;
+  document.getElementById('ovs').innerHTML=statEl('blu',fmt(rd.stargazers_count),'Stars')+statEl('grn',fmt(rd.forks_count),'Forks')+statEl('amb',rd.open_issues_count||0,'Open Issues')+statEl('pur',br.length,'Branches');
+  document.getElementById('desc').textContent=rd.description||'No description provided.';
+  document.getElementById('topics').innerHTML=tp.length?tp.map(function(t){return'<span class="pill">'+t+'</span>';}).join(''):'<span style="color:var(--text3);font-size:.78rem">No topics set.</span>';
+  document.getElementById('ctrib').innerHTML=(cd||[]).slice(0,6).map(function(c){return'<tr><td><a href="'+c.html_url+'" target="_blank" style="color:var(--cyan);text-decoration:none">@'+c.login+'</a></td><td style="color:var(--text)">'+fmt(c.contributions)+'</td><td><a href="'+c.html_url+'" target="_blank" style="color:var(--text3);font-size:.73rem">github.com/'+c.login+'</a></td></tr>';}).join('');
+  var cr=new Date(rd.created_at).toLocaleDateString(),up=new Date(rd.updated_at).toLocaleDateString();
+  document.getElementById('metab').innerHTML=[['Full Name',rd.full_name],['Description',rd.description||'--'],['Language',rd.language||'--'],['Stars',fmt(rd.stargazers_count)],['Forks',fmt(rd.forks_count)],['License',rd.license?rd.license.name:'Not specified'],['Default Branch',rd.default_branch],['Visibility',rd.private?'Private':'Public'],['Created',cr],['Updated',up],['Topics',tp.join(', ')||'None']].map(function(x){return'<tr><td>'+x[0]+'</td><td style="color:var(--text)">'+x[1]+'</td></tr>';}).join('');
+  var totB=Object.values(ld||{}).reduce(function(a,b){return a+b;},0)||1;
+  document.getElementById('langb').innerHTML=Object.entries(ld||{}).sort(function(a,b){return b[1]-a[1];}).slice(0,10).map(function(x){var p=Math.round(x[1]/totB*100);return'<div class="lr"><span class="ln">'+x[0]+'</span><div class="lt"><div class="lf" style="width:'+p+'%;background:'+lc(x[0])+'"></div></div><span class="lp">'+p+'%</span></div>';}).join('');
+  var sr=[];
+  if(!rd.description)sr.push('Add a repository description for better first impressions.');
+  if(!rd.license)sr.push('No license -- add MIT or Apache 2.0 to clarify usage rights.');
+  if(!tp.length)sr.push('Add GitHub topics to improve discoverability.');
+  sr.push('Add README badges (build status, coverage) to signal project health.');
+  document.getElementById('srec').innerHTML=sr.slice(0,4).map(recEl).join('');
+  document.getElementById('istat').innerHTML=statEl('amb',ro.length,'Open Issues')+statEl('grn',rc.length,'Closed Issues')+statEl('blu',sc.rr+'%','Resolution Rate');
+  var lc2={};ro.forEach(function(i){(i.labels||[]).forEach(function(l){lc2[l.name]=(lc2[l.name]||0)+1;});});
+  var maxL=Math.max.apply(null,Object.values(lc2).concat([1]));
+  document.getElementById('lblb').innerHTML=Object.entries(lc2).length?Object.entries(lc2).sort(function(a,b){return b[1]-a[1];}).slice(0,8).map(function(x){return'<div class="lr"><span class="ln" style="width:110px">'+x[0]+'</span><div class="lt"><div class="lf" style="width:'+Math.round(x[1]/maxL*100)+'%;background:var(--amber)"></div></div><span class="lp">'+x[1]+'</span></div>';}).join(''):'<p style="color:var(--text3);font-size:.8rem">No labels on open issues.</p>';
+  document.getElementById('issl').innerHTML=ro.slice(0,7).map(function(i){return'<div class="ir"><span class="inum">#'+i.number+'</span><div><div class="itit"><a href="'+i.html_url+'" target="_blank" style="color:var(--text);text-decoration:none">'+esc(i.title)+'</a></div><div class="isub">by @'+(i.user?i.user.login:'?')+' &middot; '+i.comments+' comments &middot; '+new Date(i.created_at).toLocaleDateString()+'</div></div></div>';}).join('')||'<p style="color:var(--text3);font-size:.8rem">No open issues -- great!</p>';
+  var ir=[];
+  if(ro.length>100)ir.push('High open count -- run monthly triage to label, prioritize, or close stale issues.');
+  if(sc.rr<50)ir.push('Low resolution rate -- close backlog issues before opening new ones.');
+  ir.push('Use "good first issue" labels to welcome new contributors.');
+  ir.push('Add GitHub issue templates for bug reports and feature requests.');
+  document.getElementById('irec').innerHTML=ir.slice(0,4).map(recEl).join('');
+  document.getElementById('prstat').innerHTML=statEl('grn',op.length,'Open PRs')+statEl('pur',cp.length,'Closed PRs')+statEl('blu',sc.pc+'%','Close Rate');
+  document.getElementById('prl').innerHTML=op.slice(0,6).map(function(p){return'<div class="ir"><span class="inum">#'+p.number+'</span><div><div class="itit"><a href="'+p.html_url+'" target="_blank" style="color:var(--text);text-decoration:none">'+esc(p.title)+'</a></div><div class="isub">by @'+(p.user?p.user.login:'?')+' &middot; '+p.comments+' comments &middot; '+new Date(p.updated_at).toLocaleDateString()+'</div><span class="bdg bop" style="margin-top:3px;display:inline-block">open</span></div></div>';}).join('')||'<p style="color:var(--text3);font-size:.8rem">No open PRs.</p>';
+  var pr2=[];
+  if(op.length>20)pr2.push('Large PR backlog -- aim for PRs reviewed within 48 hours of opening.');
+  pr2.push('Require 2 reviewer approvals via branch protection rules.');
+  pr2.push('Add CI checks (tests, lint) as required status checks before merge.');
+  pr2.push('Encourage small PRs under 400 lines for faster, better reviews.');
+  document.getElementById('prrec').innerHTML=pr2.slice(0,4).map(recEl).join('');
+  var db=rd.default_branch||'main';
+  document.getElementById('brl').innerHTML=br.slice(0,20).map(function(b){return'<div class="ir"><div style="display:flex;align-items:center;gap:7px;width:100%"><span style="font-family:var(--mono);font-size:.8rem;color:var(--cyan)">'+b.name+'</span>'+(b.name===db?'<span class="bdg bdf">default</span>':'')+(b.protected?'<span class="bdg bpr">protected</span>':'')+'</div></div>';}).join('');
+  document.getElementById('coml').innerHTML=co.slice(0,8).map(function(c){return'<div class="ir"><span class="inum" style="font-size:.68rem">'+(c.sha||'').slice(0,7)+'</span><div><div class="itit">'+esc((c.commit&&c.commit.message?c.commit.message:'').split('\n')[0].slice(0,85))+'</div><div class="isub">'+(c.commit&&c.commit.author?c.commit.author.name:'?')+' &middot; '+(c.commit&&c.commit.author&&c.commit.author.date?new Date(c.commit.author.date).toLocaleDateString():'')+'</div></div></div>';}).join('');
+  var br2=[];
+  var prot=br.filter(function(b){return b.protected;}).length;
+  if(prot===0)br2.push('Enable branch protection on "'+db+'" -- require reviews and CI before merge.');
+  if(br.length>20)br2.push('Enable auto-delete of merged branches to keep the repo clean.');
+  br2.push('Enforce signed commits for supply-chain security.');
+  br2.push('Document your branching strategy (GitHub Flow or GitFlow) in CONTRIBUTING.md.');
+  document.getElementById('brrec').innerHTML=br2.slice(0,4).map(recEl).join('');
+  var sl=[{l:'Issue Management',s:sc.is,d:sc.rr+'% resolution &middot; '+ro.length+' open'},{l:'PR Velocity',s:sc.ps,d:sc.pc+'% close rate &middot; '+op.length+' open PRs'},{l:'Branch Strategy',s:sc.bs,d:br.length+' branches &middot; '+prot+' protected'},{l:'Community',s:sc.pop,d:fmt(rd.stargazers_count)+' stars &middot; '+fmt(rd.forks_count)+' forks'}];
+  document.getElementById('scards').innerHTML=sl.map(function(x){return'<div class="scrow"><div class="scnum" style="color:'+scc(x.s)+'">'+x.s+'<span style="font-size:.9rem;color:var(--text3)">/10</span></div><div class="scinfo" style="flex:1"><h4>'+x.l+'</h4><p>'+x.d+'</p><div class="scbt"><div class="scbf" style="width:'+(x.s*10)+'%;background:'+scc(x.s)+'"></div></div></div></div>';}).join('');
+  var stars=rd.stargazers_count||0;
+  var pop=stars>10000?'highly popular':stars>1000?'growing':'early-stage';
+  document.getElementById('verd').innerHTML='<strong style="font-size:1.3rem;color:'+scc(sc.ov)+'">'+sc.ov+'/10</strong> Overall Health Score<br><br>This is a <strong style="color:var(--text)">'+pop+' repository</strong> with '+(sc.is>=7?'a well-managed issue tracker':'an issue backlog needing attention')+' and '+(sc.ps>=7?'healthy PR culture.':'a PR workflow that could improve.')+' '+br.length+' branches, '+ro.length+' open issues. '+(sc.ov>=7?'Strong engineering discipline.':'Room for improvement.');
+  MD=buildMd(d,sc);
+  document.getElementById('rw').style.display='block';
+  document.getElementById('goBtn').disabled=false;
+  document.getElementById('rw').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function buildMd(d,sc){
+  var rd=d.rd,ld=d.ld,tp=d.tp,ro=d.ro,rc=d.rc,op=d.op,cp=d.cp,br=d.br,owner=d.owner,repo=d.repo;
+  var now=new Date().toISOString().split('T')[0];
+  var totB=Object.values(ld||{}).reduce(function(a,b){return a+b;},0)||1;
+  var lines=[
+    '# GitHub Repository Analysis Report',
+    '## Repository: `'+owner+'/'+repo+'`',
+    '**Generated:** '+now+'  ','**By:** Ankush Sharma, M.Tech CSE, NIT Kurukshetra','**Powered by:** Agentic GitHub Analyzer -- CrewAI + GitHub MCP Server + OpenAI GPT-4o','','---','',
+    '## Repository Structure','','| Property | Value |','|---|---|',
+    '| Name | '+rd.full_name+' |','| Description | '+(rd.description||'--')+' |',
+    '| Stars | '+(rd.stargazers_count||0)+' |','| Forks | '+(rd.forks_count||0)+' |',
+    '| Language | '+(rd.language||'--')+' |','| License | '+(rd.license?rd.license.name:'Not specified')+' |',
+    '| Default Branch | '+rd.default_branch+' |','| Topics | '+(tp.join(', ')||'None')+' |',
+    '','### Languages','',
+  ].concat(Object.entries(ld||{}).sort(function(a,b){return b[1]-a[1];}).slice(0,8).map(function(x){return'| '+x[0]+' | '+Math.round(x[1]/totB*100)+'% |';})).concat([
+    '','---','','## Issue Analysis','','| Metric | Value |','|---|---|',
+    '| Open Issues | '+ro.length+' |','| Closed Issues | '+rc.length+' |',
+    '| Resolution Rate | '+sc.rr+'% |','| Score | '+sc.is+'/10 |',
+    '','---','','## PR Analysis','','| Metric | Value |','|---|---|',
+    '| Open PRs | '+op.length+' |','| Closed PRs | '+cp.length+' |',
+    '| Close Rate | '+sc.pc+'% |','| Score | '+sc.ps+'/10 |',
+    '','---','','## Branch Analysis','','**Total Branches:** '+br.length,'',
+  ]).concat(br.slice(0,12).map(function(b){return'- `'+b.name+'`'+(b.protected?' (protected)':'')+(b.name===rd.default_branch?' <- default':'');})).concat([
+    '','---','','## Health Scores','','| Dimension | Score |','|---|---|',
+    '| Issue Management | '+sc.is+'/10 |','| PR Velocity | '+sc.ps+'/10 |',
+    '| Branch Strategy | '+sc.bs+'/10 |','| Community | '+sc.pop+'/10 |',
+    '| **Overall** | **'+sc.ov+'/10** |','','---',
+    '','*Generated by Agentic GitHub Repository Analyzer*',
+    '*Ankush Sharma - ankushsharma5897@gmail.com*',
+  ]);
+  return lines.join('\n');
+}
+function dlmd(){
+  if(!MD||!D)return;
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([MD],{type:'text/markdown'}));
+  a.download=D.owner+'_'+D.repo+'_report.md';a.click();
+}
+function st(name,btn){
+  ['ov','str','iss','pr','br','sc'].forEach(function(n){document.getElementById('t-'+n).style.display='none';});
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('t-'+name).style.display='block';
+  btn.classList.add('on');
+}
+document.getElementById('repoInput').addEventListener('keydown',function(e){if(e.key==='Enter')go();});
+</script>
+</body>
+</html>
