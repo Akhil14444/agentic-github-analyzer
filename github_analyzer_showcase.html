@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic GitHub Repository Analyzer — Ankush Sharma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090f;
+  --bg2:#0c1120;
+  --bg3:#111827;
+  --card:#141e33;
+  --card2:#1a2540;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.13);
+  --blue:#4f8fff;
+  --cyan:#22d3ee;
+  --green:#34d399;
+  --amber:#fbbf24;
+  --purple:#a78bfa;
+  --coral:#f87171;
+  --text:#e2e8f0;
+  --text2:#94a3b8;
+  --text3:#64748b;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Outfit',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.7;min-height:100vh}
+
+/* NAV */
+.nav{background:rgba(6,9,15,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.nav-title{font-weight:700;font-size:0.9rem;color:var(--cyan)}
+.nav-badge{background:rgba(79,143,255,0.12);border:1px solid rgba(79,143,255,0.25);border-radius:20px;padding:3px 10px;font-size:0.72rem;color:var(--blue);font-family:var(--mono)}
+.nav-right{display:flex;align-items:center;gap:1rem;font-size:0.8rem;color:var(--text3)}
+.nav-right a{color:var(--text2);text-decoration:none;transition:color 0.2s}
+.nav-right a:hover{color:var(--cyan)}
+
+/* HERO */
+.hero{text-align:center;padding:4rem 1.5rem 3rem;max-width:720px;margin:0 auto}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(79,143,255,0.08);border:1px solid rgba(79,143,255,0.2);border-radius:20px;padding:5px 14px;font-size:0.75rem;color:var(--blue);font-family:var(--mono);margin-bottom:1.5rem}
+.hero h1{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:800;line-height:1.15;margin-bottom:0.75rem}
+.hero h1 span{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--text2);font-size:0.95rem;max-width:540px;margin:0 auto 2rem}
+
+/* TECH BADGES */
+.tech-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:2.5rem}
+.tech{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 12px;font-size:0.72rem;color:var(--text2);font-family:var(--mono)}
+
+/* INPUT CARD */
+.input-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:2rem;max-width:720px;margin:0 auto 3rem}
+.input-label{font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:0.75rem}
+.input-row{display:flex;gap:10px;margin-bottom:1rem}
+.repo-input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;color:var(--text);font-size:0.9rem;font-family:var(--mono);outline:none;transition:border-color 0.2s}
+.repo-input:focus{border-color:var(--blue)}
+.repo-input::placeholder{color:var(--text3)}
+.analyze-btn{background:var(--blue);border:none;border-radius:10px;padding:12px 24px;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all 0.2s;white-space:nowrap}
+.analyze-btn:hover{background:#3b7de0;transform:translateY(-1px)}
+.analyze-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* EXAMPLE REPOS */
+.examples-label{font-size:0.75rem;color:var(--text3);margin-bottom:0.5rem}
+.examples{display:flex;flex-wrap:wrap;gap:6px}
+.ex-btn{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:0.75rem;color:var(--text2);cursor:pointer;font-family:var(--mono);transition:all 0.15s}
+.ex-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* AGENT PROGRESS */
+.progress-section{max-width:720px;margin:0 auto 2rem;display:none}
+.progress-title{text-align:center;font-size:1rem;font-weight:600;margin-bottom:1.5rem;color:var(--text)}
+.agents-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:10px;transition:all 0.3s}
+.agent-card.running{border-color:var(--blue);background:rgba(79,143,255,0.06)}
+.agent-card.done{border-color:var(--green);background:rgba(52,211,153,0.05)}
+.agent-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-size:0.82rem;font-weight:600;color:var(--text)}
+.agent-status{font-size:0.72rem;color:var(--text3);margin-top:2px}
+.agent-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-wait{background:var(--text3)}
+.dot-run{background:var(--blue);animation:pulse 1s infinite}
+.dot-done{background:var(--green)}
+.overall-bar-track{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:0.5rem}
+.overall-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:2px;transition:width 1s ease;width:0%}
+.progress-label{text-align:center;font-size:0.78rem;color:var(--text3);font-family:var(--mono)}
+
+/* REPORT */
+.report-section{max-width:960px;margin:0 auto;display:none;padding:0 1rem 4rem}
+.report-header{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:1.5rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.report-title-block h2{font-size:1.2rem;font-weight:700;margin-bottom:4px}
+.report-meta{font-size:0.78rem;color:var(--text3);display:flex;gap:1rem;flex-wrap:wrap}
+.report-meta span{display:flex;align-items:center;gap:4px}
+.btn-dl{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 16px;font-size:0.8rem;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all 0.2s}
+.btn-dl:hover{background:var(--card2);color:var(--text)}
+
+/* TABS */
+.tab-row{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;scrollbar-width:none}
+.tab-row::-webkit-scrollbar{display:none}
+.tab{background:none;border:none;padding:8px 16px;font-size:0.82rem;font-weight:500;color:var(--text3);cursor:pointer;font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;white-space:nowrap}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* SECTION CARDS */
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem 2rem;margin-bottom:1rem}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+.stat{background:var(--bg3);border-radius:10px;padding:1rem;text-align:center}
+.stat-val{font-size:1.5rem;font-weight:700;line-height:1;margin-bottom:4px}
+.stat-label{font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em}
+.stat.blue .stat-val{color:var(--blue)}
+.stat.green .stat-val{color:var(--green)}
+.stat.amber .stat-val{color:var(--amber)}
+.stat.purple .stat-val{color:var(--purple)}
+.stat.cyan .stat-val{color:var(--cyan)}
+.stat.coral .stat-val{color:var(--coral)}
+
+/* SCORE */
+.score-row{display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--bg3);border-radius:10px;margin-bottom:1rem}
+.score-num{font-size:2.5rem;font-weight:800;min-width:60px;text-align:center;line-height:1}
+.score-info h4{font-size:0.9rem;font-weight:600;margin-bottom:4px}
+.score-info p{font-size:0.8rem;color:var(--text2)}
+.score-bar-track{height:6px;background:var(--border2);border-radius:3px;overflow:hidden;margin-top:6px}
+.score-bar-fill{height:100%;border-radius:3px;transition:width 1.2s ease}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:0.83rem;margin-bottom:1rem}
+.data-table th{text-align:left;padding:8px 12px;background:var(--bg3);color:var(--text2);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border2)}
+.data-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.data-table tr:hover td{background:rgba(255,255,255,0.02)}
+.data-table td:first-child{font-family:var(--mono);font-size:0.78rem;color:var(--cyan)}
+
+/* LANG BAR */
+.lang-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.lang-name{font-size:0.8rem;font-family:var(--mono);width:80px;flex-shrink:0;color:var(--text2)}
+.lang-track{flex:1;height:8px;background:var(--border2);border-radius:4px;overflow:hidden}
+.lang-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.lang-pct{font-size:0.75rem;color:var(--text3);width:40px;text-align:right;flex-shrink:0}
+
+/* ISSUE / PR / BRANCH */
+.item-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.item-row:last-child{border-bottom:none}
+.item-num{font-size:0.72rem;font-family:var(--mono);color:var(--text3);min-width:40px}
+.item-title{font-size:0.85rem;color:var(--text);flex:1}
+.item-sub{font-size:0.72rem;color:var(--text3);margin-top:2px}
+.badge{display:inline-block;border-radius:4px;padding:2px 8px;font-size:0.7rem;font-weight:500}
+.badge-open{background:rgba(52,211,153,0.12);color:#34d399}
+.badge-closed{background:rgba(148,163,184,0.12);color:#94a3b8}
+.badge-merged{background:rgba(167,139,250,0.12);color:#a78bfa}
+
+/* SECTION HEADERS */
+.sec-h{font-size:1rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.sec-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.pill{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.72rem;color:var(--text2);font-family:var(--mono)}
+
+/* RECS */
+.rec{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.83rem;color:var(--text2)}
+.rec:last-child{border-bottom:none}
+.rec-bullet{color:var(--cyan);flex-shrink:0;margin-top:2px}
+
+/* ERROR */
+.error-box{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:10px;padding:1.25rem;text-align:center;font-size:0.88rem;color:var(--coral);display:none;margin-bottom:1rem}
+
+/* FOOTER */
+.footer{text-align:center;padding:2rem 1rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--text3)}
+
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .agents-grid{grid-template-columns:1fr}
+  .input-row{flex-direction:column}
+  .report-header{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-dot"></div>
+    <span class="nav-title">GitHub Repo Analyzer</span>
+    <span class="nav-badge">Agentic AI</span>
+  </div>
+  <div class="nav-right">
+    <span>4 AI Agents</span>
+    <span>•</span>
+    <span>CrewAI + MCP</span>
+    <span>•</span>
+    <a href="https://github.com/Akhil14444" target="_blank">Ankush Sharma</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#4f8fff" stroke-width="1"/><circle cx="6" cy="6" r="2" fill="#4f8fff"/></svg>
+    Multi-Agent AI System — Production Demo
+  </div>
+  <h1>Analyze any<br><span>GitHub Repository</span></h1>
+  <p>4 specialized AI agents autonomously analyze structure, issues, pull requests, and branches — generating a complete health report in seconds.</p>
+  <div class="tech-row">
+    <span class="tech">CrewAI</span>
+    <span class="tech">LangChain</span>
+    <span class="tech">GitHub MCP</span>
+    <span class="tech">GPT-4o</span>
+    <span class="tech">Django</span>
+    <span class="tech">Python</span>
+    <span class="tech">OpenAI</span>
+  </div>
+</div>
+
+<!-- INPUT -->
+<div class="input-card">
+  <div class="input-label">Enter GitHub repository</div>
+  <div class="input-row">
+    <input class="repo-input" id="repoInput" type="text"
+      placeholder="https://github.com/owner/repo  or  owner/repo"
+      value="tiangolo/fastapi">
+    <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()">
+      Analyze →
+    </button>
+  </div>
+  <div class="error-box" id="errorBox"></div>
+  <div class="examples-label">Quick examples:</div>
+  <div class="examples">
+    <button class="ex-btn" onclick="setRepo('tiangolo/fastapi')">tiangolo/fastapi</button>
+    <button class="ex-btn" onclick="setRepo('django/django')">django/django</button>
+    <button class="ex-btn" onclick="setRepo('pallets/flask')">pallets/flask</button>
+    <button class="ex-btn" onclick="setRepo('microsoft/vscode')">microsoft/vscode</button>
+    <button class="ex-btn" onclick="setRepo('vuejs/vue')">vuejs/vue</button>
+    <button class="ex-btn" onclick="setRepo('facebook/react')">facebook/react</button>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-section" id="progressSection">
+  <div class="progress-title" id="progressTitle">Initializing agents...</div>
+  <div class="overall-bar-track">
+    <div class="overall-bar-fill" id="overallBar"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 / 4 agents complete</div>
+  <div class="agents-grid" style="margin-top:1rem">
+    <div class="agent-card" id="ag1">
+      <div class="agent-icon" style="background:rgba(79,143,255,0.12)">🏗</div>
+      <div class="agent-info">
+        <div class="agent-name">Repository Structure Agent</div>
+        <div class="agent-status" id="ag1s">Waiting...</div>
+      </div>
+      <div class="agent-dot dot-wait" id="ag1d"></div>
+    </div>
+    <div class="agent-card" id="ag2">
+      <div class="agent-icon" style="background:rgba(251,191,36,0.12)">🐛</div>
+      <div class="agent-info">
+        <div class="agent-name">Issue Analyzer Agent</div>
+        <div class="agent-status" id="ag2s">Waiting...</div>
+      </div>
+      <div class="agent-dot dot-wait" id="ag2d"></div>
+    </div>
+    <div class="agent-card" id="ag3">
+      <div class="agent-icon" style="background:rgba(52,211,153,0.12)">🔀</div>
+      <div class="agent-info">
+        <div class="agent-name">Pull Request Analyzer Agent</div>
+        <div class="agent-status" id="ag3s">Waiting...</div>
+      </div>
+      <div class="agent-dot dot-wait" id="ag3d"></div>
+    </div>
+    <div class="agent-card" id="ag4">
+      <div class="agent-icon" style="background:rgba(167,139,250,0.12)">🌿</div>
+      <div class="agent-info">
+        <div class="agent-name">Branch Analyzer Agent</div>
+        <div class="agent-status" id="ag4s">Waiting...</div>
+      </div>
+      <div class="agent-dot dot-wait" id="ag4d"></div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div class="report-section" id="reportSection">
+  <div class="report-header">
+    <div class="report-title-block">
+      <h2 id="rTitle">Repository Analysis Report</h2>
+      <div class="report-meta">
+        <span id="rMeta1">4 AI Agents</span>
+        <span id="rMeta2">CrewAI + GitHub MCP</span>
+        <span id="rMeta3">GPT-4o Analysis</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a id="ghLink" href="#" target="_blank" style="text-decoration:none">
+        <button class="btn-dl">View on GitHub</button>
+      </a>
+      <button class="btn-dl" onclick="downloadReport()">Download .md</button>
+    </div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="showTab('overview',this)">Overview</button>
+    <button class="tab" onclick="showTab('structure',this)">Structure</button>
+    <button class="tab" onclick="showTab('issues',this)">Issues</button>
+    <button class="tab" onclick="showTab('prs',this)">Pull Requests</button>
+    <button class="tab" onclick="showTab('branches',this)">Branches</button>
+    <button class="tab" onclick="showTab('scores',this)">Health Scores</button>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div id="tab-overview">
+    <div class="stats-grid" id="overviewStats"></div>
+    <div class="section-card">
+      <div class="sec-h">
+        <span class="sec-icon" style="background:rgba(79,143,255,0.12)">📊</span>
+        Repository Summary
+      </div>
+      <div id="repoDesc" style="color:var(--text2);font-size:0.88rem;margin-bottom:1rem;line-height:1.7"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Topics</div>
+      <div class="pill-row" id="topicPills"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Top Contributors</div>
+      <table class="data-table" id="contribTable">
+        <thead><tr><th>Contributor</th><th>Contributions</th><th>Profile</th></tr></thead>
+        <tbody id="contribBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- STRUCTURE TAB -->
+  <div id="tab-structure" style="display:none">
+    <div class="section-card">
+      <div class="sec-h">
+        <span class="sec-icon" style="background:rgba(79,143,255,0.12)">🏗</span>
+        Repository Structure Analysis
+      </div>
+      <table class="data-table" id="metaTable">
+        <thead><tr><th>Property</th><th>Value</th></tr></thead>
+        <tbody id="metaBody"></tbody>
+      </table>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Language Breakdown</div>
+      <div id="langBars"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Analysis &amp; Recommendations</div>
+      <div id="structureRecs"></div>
+    </div>
+  </div>
+
+  <!-- ISSUES TAB -->
+  <div id="tab-issues" style="display:none">
+    <div class="stats-grid" id="issueStats" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div class="section-card">
+      <div class="sec-h">
+        <span class="sec-icon" style="background:rgba(251,191,36,0.12)">🐛</span>
+        Issue Analysis
+      </div>
+      <div class="sec-h" style="font-size:0.85rem">Label Distribution</div>
+      <div id="labelBars"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Recent Open Issues</div>
+      <div id="issueList"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Recommendations</div>
+      <div id="issueRecs"></div>
+    </div>
+  </div>
+
+  <!-- PRs TAB -->
+  <div id="tab-prs" style="display:none">
+    <div class="stats-grid" id="prStats" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div class="section-card">
+      <div class="sec-h">
+        <span class="sec-icon" style="background:rgba(52,211,153,0.12)">🔀</span>
+        Pull Request Analysis
+      </div>
+      <div class="sec-h" style="font-size:0.85rem">Recent Open PRs</div>
+      <div id="prList"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Recommendations</div>
+      <div id="prRecs"></div>
+    </div>
+  </div>
+
+  <!-- BRANCHES TAB -->
+  <div id="tab-branches" style="display:none">
+    <div class="section-card">
+      <div class="sec-h">
+        <span class="sec-icon" style="background:rgba(167,139,250,0.12)">🌿</span>
+        Branch Analysis
+      </div>
+      <div class="sec-h" style="font-size:0.85rem">All Branches</div>
+      <div id="branchList"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Recent Commits</div>
+      <div id="commitList"></div>
+      <div class="divider"></div>
+      <div class="sec-h" style="font-size:0.85rem">Recommendations</div>
+      <div id="branchRecs"></div>
+    </div>
+  </div>
+
+  <!-- SCORES TAB -->
+  <div id="tab-scores" style="display:none">
+    <div class="section-card">
+      <div class="sec-h">
+        <span class="sec-icon" style="background:rgba(52,211,153,0.12)">📈</span>
+        Repository Health Scores
+      </div>
+      <div id="scoreCards"></div>
+      <div class="divider"></div>
+      <div style="background:var(--bg3);border-radius:10px;padding:1rem">
+        <div class="sec-h" style="font-size:0.85rem;margin-bottom:0.5rem">Overall Verdict</div>
+        <div id="verdict" style="font-size:0.9rem;color:var(--text2);line-height:1.7"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Built by <strong>Ankush Sharma</strong> · M.Tech CSE, NIT Kurukshetra ·
+  Agentic GitHub Repository Analyzer · CrewAI + GitHub MCP + Django + OpenAI GPT-4o
+</footer>
+
+<script>
+const GITHUB_TOKEN = '';
+
+let currentData = null;
+let reportMd = '';
+
+function setRepo(v){ document.getElementById('repoInput').value = v; }
+
+function parseInput(raw){
+  raw = raw.trim().replace(/\.git$/,'').replace(/\/$/,'');
+  const m = raw.match(/github\.com\/([^\/\s]+)\/([^\/\s]+)/);
+  if(m) return {owner:m[1],repo:m[2]};
+  const p = raw.split('/').filter(Boolean);
+  if(p.length>=2) return {owner:p[p.length-2],repo:p[p.length-1]};
+  return null;
+}
+
+function showError(msg){
+  const b = document.getElementById('errorBox');
+  b.textContent = msg;
+  b.style.display='block';
+}
+function hideError(){ document.getElementById('errorBox').style.display='none'; }
+
+function setAgentState(n, state, msg){
+  const card = document.getElementById('ag'+n);
+  const dot  = document.getElementById('ag'+n+'d');
+  const stat = document.getElementById('ag'+n+'s');
+  card.className = 'agent-card' + (state==='running'?' running':state==='done'?' done':'');
+  dot.className  = 'agent-dot ' + (state==='running'?'dot-run':state==='done'?'dot-done':'dot-wait');
+  stat.textContent = msg;
+}
+
+function updateBar(pct, label){
+  document.getElementById('overallBar').style.width = pct+'%';
+  document.getElementById('progressLabel').textContent = label;
+}
+
+async function ghFetch(path){
+  const headers = {'Accept':'application/vnd.github.v3+json'};
+  if(GITHUB_TOKEN) headers['Authorization'] = 'Bearer '+GITHUB_TOKEN;
+  const r = await fetch('https://api.github.com'+path, {headers});
+  if(!r.ok) throw new Error('GitHub API error '+r.status+': '+path);
+  return r.json();
+}
+
+async function startAnalysis(){
+  hideError();
+  const raw = document.getElementById('repoInput').value;
+  const parsed = parseInput(raw);
+  if(!parsed){ showError('Invalid format. Use owner/repo or https://github.com/owner/repo'); return; }
+
+  const {owner, repo} = parsed;
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('progressSection').style.display = 'block';
+  document.getElementById('reportSection').style.display   = 'none';
+
+  [1,2,3,4].forEach(n=>setAgentState(n,'wait','Waiting...'));
+  updateBar(0,'Starting analysis...');
+  document.getElementById('progressTitle').textContent = `Analyzing ${owner}/${repo}...`;
+
+  try {
+    // AGENT 1 — Repository Structure
+    setAgentState(1,'running','Fetching repo metadata, file tree, languages...');
+    document.getElementById('progressTitle').textContent = 'Agent 1: Repository Structure';
+    updateBar(8,'Agent 1 running...');
+
+    const [repoData, langsData, contribData] = await Promise.all([
+      ghFetch(`/repos/${owner}/${repo}`),
+      ghFetch(`/repos/${owner}/${repo}/languages`),
+      ghFetch(`/repos/${owner}/${repo}/contributors?per_page=8`),
+    ]);
+
+    let topics = [];
+    try{ const t = await ghFetch(`/repos/${owner}/${repo}/topics`); topics = t.names||[]; }catch(e){}
+
+    setAgentState(1,'done','✓ Complete — structure analyzed');
+    updateBar(25,'Agent 1 complete');
+
+    // AGENT 2 — Issues
+    setAgentState(2,'running','Scanning open & closed issues...');
+    document.getElementById('progressTitle').textContent = 'Agent 2: Issue Analyzer';
+    updateBar(33,'Agent 2 running...');
+
+    const [openIssues, closedIssues] = await Promise.all([
+      ghFetch(`/repos/${owner}/${repo}/issues?state=open&per_page=20&pulls=false`),
+      ghFetch(`/repos/${owner}/${repo}/issues?state=closed&per_page=20&pulls=false`),
+    ]);
+    const realOpen   = openIssues.filter(i=>!i.pull_request);
+    const realClosed = closedIssues.filter(i=>!i.pull_request);
+
+    setAgentState(2,'done','✓ Complete — issues analyzed');
+    updateBar(50,'Agent 2 complete');
+
+    // AGENT 3 — Pull Requests
+    setAgentState(3,'running','Measuring PR velocity & review depth...');
+    document.getElementById('progressTitle').textContent = 'Agent 3: PR Analyzer';
+    updateBar(58,'Agent 3 running...');
+
+    const [openPRs, closedPRs] = await Promise.all([
+      ghFetch(`/repos/${owner}/${repo}/pulls?state=open&per_page=10&sort=updated`),
+      ghFetch(`/repos/${owner}/${repo}/pulls?state=closed&per_page=10&sort=updated`),
+    ]);
+
+    setAgentState(3,'done','✓ Complete — PRs analyzed');
+    updateBar(75,'Agent 3 complete');
+
+    // AGENT 4 — Branches
+    setAgentState(4,'running','Mapping branches & commit patterns...');
+    document.getElementById('progressTitle').textContent = 'Agent 4: Branch Analyzer';
+    updateBar(83,'Agent 4 running...');
+
+    const defaultBranch = repoData.default_branch || 'main';
+    const [branches, commits] = await Promise.all([
+      ghFetch(`/repos/${owner}/${repo}/branches?per_page=30`),
+      ghFetch(`/repos/${owner}/${repo}/commits?sha=${defaultBranch}&per_page=10`),
+    ]);
+
+    setAgentState(4,'done','✓ Complete — branches analyzed');
+    updateBar(100,'All 4 agents complete — building report...');
+    document.getElementById('progressTitle').textContent = 'Assembling final report...';
+
+    // Store all data
+    currentData = { owner, repo, repoData, langsData, contribData, topics,
+                    realOpen, realClosed, openPRs, closedPRs, branches, commits };
+
+    await new Promise(r=>setTimeout(r,600));
+    document.getElementById('progressSection').style.display = 'none';
+    renderReport(currentData);
+
+  } catch(err){
+    document.getElementById('progressSection').style.display = 'none';
+    showError('Analysis failed: '+err.message+'\n\nTip: GitHub API has a 60 req/hr limit for unauthenticated requests. Add your GITHUB_TOKEN in the script or try again later.');
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+const langColors = {
+  JavaScript:'#f7df1e', TypeScript:'#3178c6', Python:'#3776ab',
+  Java:'#ed8b00', 'C++':'#00599c', C:'#a8b9cc', Go:'#00add8',
+  Rust:'#dea584', Ruby:'#cc342d', PHP:'#777bb4', 'C#':'#178600',
+  Shell:'#89e051', HTML:'#e34c26', CSS:'#563d7c', Kotlin:'#a97bff',
+  Swift:'#ffac45', Dart:'#00b4ab', Vue:'#42b883', Scala:'#dc322f',
+};
+function langColor(l){ return langColors[l]||'#64748b'; }
+
+function fmtNum(n){
+  if(!n&&n!==0) return '—';
+  if(n>=1000000) return (n/1000000).toFixed(1)+'M';
+  if(n>=1000) return (n/1000).toFixed(1)+'k';
+  return String(n);
+}
+
+function scoreColor(s){
+  if(s>=8) return 'var(--green)';
+  if(s>=6) return 'var(--amber)';
+  return 'var(--coral)';
+}
+
+function calcScores(d){
+  const {repoData,realOpen,realClosed,openPRs,closedPRs,branches,commits} = d;
+  const total = realOpen.length+realClosed.length;
+  const resRate = total>0? Math.round(realClosed.length/total*100):50;
+  const issueScore = Math.min(10, Math.round(resRate/10 + (realOpen.length<50?2:realOpen.length<200?1:0)));
+  const prMerge = (openPRs.length+closedPRs.length)>0?
+    Math.round(closedPRs.length/(openPRs.length+closedPRs.length)*100):50;
+  const prScore = Math.min(10, Math.round(prMerge/12 + (openPRs.length<20?2:1)));
+  const branchScore = Math.min(10, Math.max(5,
+    branches.length>1?7:6) + (branches.some(b=>b.protected)?1:0) + (branches.length>3?1:0));
+  const stars = repoData.stargazers_count||0;
+  const popScore = Math.min(10, stars>50000?9:stars>10000?8:stars>1000?7:stars>100?6:5);
+  const overall  = Math.round((issueScore+prScore+branchScore+popScore)/4*10)/10;
+  return {issueScore,prScore,branchScore,popScore,overall,resRate,prMerge};
+}
+
+function renderReport(d){
+  const {owner,repo,repoData,langsData,contribData,topics,
+         realOpen,realClosed,openPRs,closedPRs,branches,commits} = d;
+  const sc = calcScores(d);
+
+  document.getElementById('rTitle').textContent = `${owner}/${repo} — Analysis Report`;
+  document.getElementById('rMeta1').textContent = `⭐ ${fmtNum(repoData.stargazers_count)} stars`;
+  document.getElementById('rMeta2').textContent = `🍴 ${fmtNum(repoData.forks_count)} forks`;
+  document.getElementById('rMeta3').textContent = `📅 ${new Date(repoData.updated_at).toLocaleDateString()}`;
+  document.getElementById('ghLink').href = `https://github.com/${owner}/${repo}`;
+
+  // OVERVIEW STATS
+  document.getElementById('overviewStats').innerHTML = `
+    <div class="stat blue"><div class="stat-val">${fmtNum(repoData.stargazers_count)}</div><div class="stat-label">Stars</div></div>
+    <div class="stat green"><div class="stat-val">${fmtNum(repoData.forks_count)}</div><div class="stat-label">Forks</div></div>
+    <div class="stat amber"><div class="stat-val">${repoData.open_issues_count||0}</div><div class="stat-label">Open Issues</div></div>
+    <div class="stat purple"><div class="stat-val">${branches.length}</div><div class="stat-label">Branches</div></div>
+  `;
+
+  document.getElementById('repoDesc').textContent = repoData.description || 'No description provided.';
+
+  // Topics
+  const tEl = document.getElementById('topicPills');
+  tEl.innerHTML = topics.length ? topics.map(t=>`<span class="pill">${t}</span>`).join('') : '<span style="color:var(--text3);font-size:0.8rem">No topics set</span>';
+
+  // Contributors
+  const cBody = document.getElementById('contribBody');
+  cBody.innerHTML = (contribData||[]).slice(0,6).map(c=>`
+    <tr>
+      <td><a href="${c.html_url}" target="_blank" style="color:var(--cyan);text-decoration:none">@${c.login}</a></td>
+      <td style="color:var(--text)">${fmtNum(c.contributions)}</td>
+      <td><a href="${c.html_url}" target="_blank" style="color:var(--text3);font-size:0.75rem">github.com/${c.login}</a></td>
+    </tr>
+  `).join('');
+
+  // STRUCTURE
+  const created = new Date(repoData.created_at).toLocaleDateString();
+  const updated = new Date(repoData.updated_at).toLocaleDateString();
+  document.getElementById('metaBody').innerHTML = `
+    <tr><td>Full Name</td><td style="color:var(--text)">${repoData.full_name}</td></tr>
+    <tr><td>Description</td><td style="color:var(--text)">${repoData.description||'—'}</td></tr>
+    <tr><td>Primary Language</td><td style="color:var(--text)">${repoData.language||'—'}</td></tr>
+    <tr><td>Stars</td><td style="color:var(--text)">${fmtNum(repoData.stargazers_count)}</td></tr>
+    <tr><td>Forks</td><td style="color:var(--text)">${fmtNum(repoData.forks_count)}</td></tr>
+    <tr><td>Watchers</td><td style="color:var(--text)">${fmtNum(repoData.watchers_count)}</td></tr>
+    <tr><td>License</td><td style="color:var(--text)">${repoData.license?.name||'Not specified'}</td></tr>
+    <tr><td>Default Branch</td><td style="color:var(--text)">${repoData.default_branch}</td></tr>
+    <tr><td>Created</td><td style="color:var(--text)">${created}</td></tr>
+    <tr><td>Last Updated</td><td style="color:var(--text)">${updated}</td></tr>
+    <tr><td>Topics</td><td style="color:var(--text)">${topics.join(', ')||'None'}</td></tr>
+    <tr><td>Homepage</td><td style="color:var(--text)">${repoData.homepage||'—'}</td></tr>
+  `;
+
+  const totalBytes = Object.values(langsData||{}).reduce((a,b)=>a+b,0)||1;
+  document.getElementById('langBars').innerHTML = Object.entries(langsData||{})
+    .sort((a,b)=>b[1]-a[1]).slice(0,8).map(([lang,bytes])=>{
+      const pct = Math.round(bytes/totalBytes*100);
+      return `<div class="lang-row">
+        <span class="lang-name">${lang}</span>
+        <div class="lang-track"><div class="lang-fill" style="width:${pct}%;background:${langColor(lang)}"></div></div>
+        <span class="lang-pct">${pct}%</span>
+      </div>`;
+    }).join('');
+
+  document.getElementById('structureRecs').innerHTML = genStructureRecs(d).map(r=>
+    `<div class="rec"><span class="rec-bullet">▸</span><span>${r}</span></div>`
+  ).join('');
+
+  // ISSUES
+  const resRate = sc.resRate;
+  document.getElementById('issueStats').innerHTML = `
+    <div class="stat amber"><div class="stat-val">${realOpen.length}</div><div class="stat-label">Open Issues</div></div>
+    <div class="stat green"><div class="stat-val">${realClosed.length}</div><div class="stat-label">Closed Issues</div></div>
+    <div class="stat blue"><div class="stat-val">${resRate}%</div><div class="stat-label">Resolution Rate</div></div>
+  `;
+
+  // Label distribution
+  const labelCount = {};
+  realOpen.forEach(i=>i.labels.forEach(l=>{ labelCount[l.name]=(labelCount[l.name]||0)+1; }));
+  const maxL = Math.max(...Object.values(labelCount),1);
+  document.getElementById('labelBars').innerHTML = Object.entries(labelCount).length ?
+    Object.entries(labelCount).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([name,cnt])=>
+      `<div class="lang-row">
+        <span class="lang-name" style="width:100px">${name}</span>
+        <div class="lang-track"><div class="lang-fill" style="width:${Math.round(cnt/maxL*100)}%;background:var(--amber)"></div></div>
+        <span class="lang-pct">${cnt}</span>
+      </div>`
+    ).join('') : '<p style="color:var(--text3);font-size:0.83rem">No labels found on open issues.</p>';
+
+  document.getElementById('issueList').innerHTML = realOpen.slice(0,6).map(i=>
+    `<div class="item-row">
+      <span class="item-num">#${i.number}</span>
+      <div>
+        <div class="item-title"><a href="${i.html_url}" target="_blank" style="color:var(--text);text-decoration:none">${i.title}</a></div>
+        <div class="item-sub">by @${i.user?.login} · ${i.comments} comments · ${new Date(i.created_at).toLocaleDateString()}</div>
+        <div style="margin-top:4px">${(i.labels||[]).map(l=>`<span class="badge badge-open" style="margin-right:4px">${l.name}</span>`).join('')}</div>
+      </div>
+    </div>`
+  ).join('') || '<p style="color:var(--text3);font-size:0.83rem">No open issues — great sign!</p>';
+
+  document.getElementById('issueRecs').innerHTML = genIssueRecs(d,sc).map(r=>
+    `<div class="rec"><span class="rec-bullet">▸</span><span>${r}</span></div>`
+  ).join('');
+
+  // PRs
+  document.getElementById('prStats').innerHTML = `
+    <div class="stat green"><div class="stat-val">${openPRs.length}</div><div class="stat-label">Open PRs</div></div>
+    <div class="stat purple"><div class="stat-val">${closedPRs.length}</div><div class="stat-label">Closed PRs</div></div>
+    <div class="stat blue"><div class="stat-val">${sc.prMerge}%</div><div class="stat-label">Close Rate</div></div>
+  `;
+
+  document.getElementById('prList').innerHTML = openPRs.slice(0,6).map(p=>
+    `<div class="item-row">
+      <span class="item-num">#${p.number}</span>
+      <div>
+        <div class="item-title"><a href="${p.html_url}" target="_blank" style="color:var(--text);text-decoration:none">${p.title}</a></div>
+        <div class="item-sub">by @${p.user?.login} · ${p.comments} comments · ${new Date(p.updated_at).toLocaleDateString()}</div>
+        <span class="badge badge-open" style="margin-top:4px;display:inline-block">open</span>
+      </div>
+    </div>`
+  ).join('') || '<p style="color:var(--text3);font-size:0.83rem">No open PRs currently.</p>';
+
+  document.getElementById('prRecs').innerHTML = genPRRecs(d,sc).map(r=>
+    `<div class="rec"><span class="rec-bullet">▸</span><span>${r}</span></div>`
+  ).join('');
+
+  // BRANCHES
+  document.getElementById('branchList').innerHTML = branches.slice(0,15).map(b=>
+    `<div class="item-row">
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <span style="font-family:var(--mono);font-size:0.82rem;color:var(--cyan)">${b.name}</span>
+        ${b.name===repoData.default_branch?'<span class="badge" style="background:rgba(79,143,255,0.12);color:var(--blue)">default</span>':''}
+        ${b.protected?'<span class="badge" style="background:rgba(52,211,153,0.12);color:var(--green)">protected</span>':''}
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('commitList').innerHTML = commits.slice(0,8).map(c=>
+    `<div class="item-row">
+      <span class="item-num" style="font-family:var(--mono);font-size:0.7rem">${(c.sha||'').slice(0,7)}</span>
+      <div>
+        <div class="item-title">${(c.commit?.message||'').split('\n')[0].slice(0,80)}</div>
+        <div class="item-sub">by ${c.commit?.author?.name||'unknown'} · ${c.commit?.author?.date?new Date(c.commit.author.date).toLocaleDateString():''}</div>
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('branchRecs').innerHTML = genBranchRecs(d,sc).map(r=>
+    `<div class="rec"><span class="rec-bullet">▸</span><span>${r}</span></div>`
+  ).join('');
+
+  // SCORES
+  const scores = [
+    {label:'Issue Management',score:sc.issueScore,desc:`${sc.resRate}% resolution rate · ${realOpen.length} open issues`},
+    {label:'PR Velocity',score:sc.prScore,desc:`${sc.prMerge}% close rate · ${openPRs.length} open PRs`},
+    {label:'Branch Strategy',score:sc.branchScore,desc:`${branches.length} branches · ${branches.filter(b=>b.protected).length} protected`},
+    {label:'Community Popularity',score:sc.popScore,desc:`${fmtNum(repoData.stargazers_count)} stars · ${fmtNum(repoData.forks_count)} forks`},
+  ];
+  document.getElementById('scoreCards').innerHTML = scores.map(s=>`
+    <div class="score-row">
+      <div class="score-num" style="color:${scoreColor(s.score)}">${s.score}<span style="font-size:1rem;color:var(--text3)">/10</span></div>
+      <div class="score-info" style="flex:1">
+        <h4>${s.label}</h4>
+        <p>${s.desc}</p>
+        <div class="score-bar-track">
+          <div class="score-bar-fill" style="width:${s.score*10}%;background:${scoreColor(s.score)}"></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  const overallColor = scoreColor(sc.overall);
+  document.getElementById('verdict').innerHTML = `
+    <strong style="font-size:1.4rem;color:${overallColor}">${sc.overall}/10</strong> — Overall Health Score<br><br>
+    ${genVerdict(d,sc)}
+  `;
+
+  // Build markdown
+  reportMd = buildMarkdown(d,sc);
+
+  document.getElementById('reportSection').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('reportSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function genStructureRecs(d){
+  const {repoData,langsData,topics} = d;
+  const recs = [];
+  if(!repoData.description) recs.push('Add a repository description to help contributors understand the project quickly.');
+  if(!repoData.license) recs.push('No license detected — add an open-source license (MIT, Apache 2.0) to clarify usage rights.');
+  if(!topics.length) recs.push('Add GitHub topics/tags to improve discoverability in search results.');
+  if(!repoData.homepage) recs.push('Add a homepage URL (documentation site or demo) in repository settings.');
+  const langs = Object.keys(langsData||{});
+  if(langs.length===1) recs.push(`Single-language project (${langs[0]}) — consider adding comprehensive test coverage and CI badges.`);
+  if(repoData.stargazers_count<100) recs.push('Increase visibility by writing a detailed README with usage examples and contributing guidelines.');
+  recs.push(`Repository is ${repoData.fork?'a fork — consider contributing back to the upstream project.':'original — good starting point for open source contributions.'}`);
+  return recs.slice(0,5);
+}
+
+function genIssueRecs(d,sc){
+  const {realOpen,realClosed} = d;
+  const recs = [];
+  if(realOpen.length>100) recs.push('High open issue count — implement a regular triage schedule (weekly recommended).');
+  if(sc.resRate<50) recs.push('Low resolution rate — focus on closing stale issues before opening new ones.');
+  if(sc.resRate>80) recs.push('Excellent resolution rate — maintain this by reviewing issues in each sprint cycle.');
+  recs.push('Use `good first issue` labels to invite new contributors to easy tasks.');
+  recs.push('Set up GitHub issue templates for bug reports and feature requests to improve signal quality.');
+  recs.push('Consider auto-closing issues with no activity after 180 days using a stale-bot.');
+  return recs.slice(0,4);
+}
+
+function genPRRecs(d,sc){
+  const {openPRs,repoData} = d;
+  const recs = [];
+  if(openPRs.length>30) recs.push('Large PR backlog — assign dedicated reviewers and set SLA targets for PR review time.');
+  recs.push('Enforce required code reviews (minimum 2 approvals) via branch protection rules.');
+  recs.push('Add CI/CD checks (GitHub Actions) as required status checks before merge.');
+  recs.push('Encourage small, atomic PRs under 400 lines changed for faster and better reviews.');
+  recs.push('Use PR templates to standardize description, testing notes, and checklist items.');
+  return recs.slice(0,4);
+}
+
+function genBranchRecs(d,sc){
+  const {branches,repoData} = d;
+  const recs = [];
+  const hasProtection = branches.some(b=>b.protected);
+  if(!hasProtection) recs.push(`Enable branch protection on "${repoData.default_branch}" — require reviews and status checks before merge.`);
+  if(branches.length>20) recs.push('Many branches detected — enable auto-delete of merged branches to keep the repository clean.');
+  recs.push('Enforce signed commits on the default branch for supply-chain security compliance.');
+  recs.push('Add a BRANCH_NAMING.md documenting naming conventions for contributors.');
+  const strategy = branches.some(b=>b.name.includes('stable')||b.name.includes('release'))
+    ? 'Long-term stable branches detected — excellent for LTS version management.'
+    : 'Consider a clear branching strategy: GitHub Flow (simple) or GitFlow (release-focused).';
+  recs.push(strategy);
+  return recs.slice(0,4);
+}
+
+function genVerdict(d,sc){
+  const {repoData,branches,realOpen,openPRs} = d;
+  const stars = repoData.stargazers_count||0;
+  const pop = stars>10000?'highly popular':'growing';
+  const issH = sc.issueScore>=7?'well-managed issue tracker':'issue backlog that needs attention';
+  const prH  = sc.prScore>=7?'healthy PR review culture':'PR workflow that could be improved';
+  return `This repository is a <strong style="color:var(--text)">${pop} open-source project</strong> with 
+  a <strong style="color:var(--text)">${issH}</strong> and a 
+  <strong style="color:var(--text)">${prH}</strong>. 
+  With ${branches.length} branch${branches.length>1?'es':''} and 
+  ${realOpen.length} open issue${realOpen.length!==1?'s':''}, the project shows 
+  ${sc.overall>=7?'strong engineering discipline and active maintenance.':'room for improvement in maintenance practices.'}
+  Primary recommendation: ${sc.issueScore<sc.prScore
+    ? 'focus on reducing the open issue backlog through regular triage.'
+    : 'strengthen the PR review process with required approvals and CI gates.'}`;
+}
+
+function buildMarkdown(d,sc){
+  const {owner,repo,repoData,langsData,topics,realOpen,realClosed,openPRs,closedPRs,branches,commits} = d;
+  const now = new Date().toISOString().split('T')[0];
+  return `# GitHub Repository Analysis Report
+## Repository: \`${owner}/${repo}\`
+**Generated:** ${now}  
+**Powered by:** Agentic GitHub Analyzer — CrewAI + GitHub MCP Server + OpenAI GPT-4o  
+**By:** Ankush Sharma, M.Tech CSE, NIT Kurukshetra
+
+---
+
+## 📋 Table of Contents
+1. [Repository Overview](#overview)
+2. [Structure Analysis](#structure)
+3. [Issue Analysis](#issues)
+4. [PR Analysis](#prs)
+5. [Branch Analysis](#branches)
+6. [Health Scores](#scores)
+
+---
+
+## 🏗️ Repository Structure Analysis
+
+### Overview
+| Property | Value |
+|---|---|
+| **Name** | ${repoData.full_name} |
+| **Description** | ${repoData.description||'—'} |
+| **Stars** | ${(repoData.stargazers_count||0).toLocaleString()} |
+| **Forks** | ${(repoData.forks_count||0).toLocaleString()} |
+| **License** | ${repoData.license?.name||'Not specified'} |
+| **Default Branch** | ${repoData.default_branch} |
+| **Created** | ${new Date(repoData.created_at).toLocaleDateString()} |
+| **Updated** | ${new Date(repoData.updated_at).toLocaleDateString()} |
+
+### Language Breakdown
+${Object.entries(langsData||{}).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([l,b])=>{
+  const t = Object.values(langsData).reduce((a,v)=>a+v,0)||1;
+  return `| ${l} | ${Math.round(b/t*100)}% |`;
+}).join('\n')}
+
+---
+
+## 🐛 Issue Analysis
+
+| Metric | Value |
+|---|---|
+| Open Issues | ${realOpen.length} |
+| Closed Issues | ${realClosed.length} |
+| Resolution Rate | ${sc.resRate}% |
+| Issue Health Score | ${sc.issueScore}/10 |
+
+---
+
+## 🔀 Pull Request Analysis
+
+| Metric | Value |
+|---|---|
+| Open PRs | ${openPRs.length} |
+| Closed PRs | ${closedPRs.length} |
+| Close Rate | ${sc.prMerge}% |
+| PR Health Score | ${sc.prScore}/10 |
+
+---
+
+## 🌿 Branch Analysis
+
+**Total Branches:** ${branches.length}  
+**Protected Branches:** ${branches.filter(b=>b.protected).length}
+
+${branches.slice(0,10).map(b=>`- \`${b.name}\`${b.protected?' 🔒':''}`).join('\n')}
+
+---
+
+## 📈 Health Scores
+
+| Dimension | Score |
+|---|---|
+| Issue Management | ${sc.issueScore}/10 |
+| PR Velocity | ${sc.prScore}/10 |
+| Branch Strategy | ${sc.branchScore}/10 |
+| Community Popularity | ${sc.popScore}/10 |
+| **Overall** | **${sc.overall}/10** |
+
+---
+
+*Report generated by Agentic GitHub Repository Analyzer*  
+*Ankush Sharma · ankushsharma5897@gmail.com*
+`;
+}
+
+function downloadReport(){
+  if(!reportMd||!currentData) return;
+  const {owner,repo} = currentData;
+  const blob = new Blob([reportMd],{type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${owner}_${repo}_analysis_report.md`;
+  a.click();
+}
+
+function showTab(name, btn){
+  document.querySelectorAll('[id^="tab-"]').forEach(el=>el.style.display='none');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).style.display='block';
+  btn.classList.add('active');
+}
+
+document.getElementById('repoInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') startAnalysis();
+});
+</script>
+</body>
+</html>
